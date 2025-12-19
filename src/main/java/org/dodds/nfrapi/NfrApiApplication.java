@@ -1,13 +1,13 @@
-package org.dodds.nfr.api;
+package org.dodds.nfrapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Application {
+public class NfrApiApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(NfrApiApplication.class, args);
 	}
 
 }
