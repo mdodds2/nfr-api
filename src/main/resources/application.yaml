@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: nfr-api
+  datasource:
+    url: jdbc:mysql://localhost:3306/nfr?createDatabaseIfNotExist=true
+    username: nfr
+    password: nfr4dev
+  jpa:
+    show-sql: true
