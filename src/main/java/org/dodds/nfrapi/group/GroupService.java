@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,8 +15,11 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMapper groupMapper;
 
-    public List<Group> getAllGroups() {
-        return groupRepository.findByActive(true);
+    public List<GroupDto> getAllGroups() {
+        var groups = groupRepository.findByActive(true);
+        var list = new ArrayList<GroupDto>();
+        groups.forEach(group -> list.add(groupMapper.toDto(group)));
+        return list;
     }
 
     public GroupDto getGroup(UUID groupId) {
@@ -28,6 +32,7 @@ public class GroupService {
         if(groupRepository.existsByName(request.getName()))
             throw new DuplicateGroupException();
         var group = groupMapper.toEntityFromCreateGroupRequest(request);
+        group.setActive(true);
         groupRepository.saveAndFlush(group);
         return groupMapper.toDto(group);
     }

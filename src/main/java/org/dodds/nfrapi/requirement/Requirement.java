@@ -24,13 +24,6 @@ public class Requirement {
     @Column(name = "rqmt_id")
     private UUID id;
 
-//    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-//    @JoinColumn(name = "group_id", nullable = false)
-//    private Group group;
-
-    @Column(name = "group_id")
-    private UUID groupId;
-
     @Column(name = "rqmt_name")
     private String name;
 
@@ -40,7 +33,6 @@ public class Requirement {
     @Column(name = "rqmt_background")
     private String background;
 
-    @GeneratedColumn(value = "1")
     @Column(name = "is_active", insertable = false, nullable = false)
     private Boolean active;
 
@@ -52,11 +44,26 @@ public class Requirement {
     @Column(name = "updated_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime updatedMoment;
 
+    // we don't want to delete a group if we delete a requirement (ie cascading delete)
+    @ManyToOne(fetch=FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE,
+                                                CascadeType.DETACH, CascadeType.REFRESH})
+    @JoinColumn(name = "group_id")
+    private Group group;
+
+    public Requirement(UUID id, String name, String description, String background, Boolean active, LocalDateTime createdMoment, LocalDateTime updatedMoment) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.background = background;
+        this.active = active;
+        this.createdMoment = createdMoment;
+        this.updatedMoment = updatedMoment;
+    }
+
     @Override
     public String toString() {
         return "Requirement{" +
                 "id=" + id +
-                ", group=" + groupId +
                 ", name=" + name +
                 ", description='" + description + '\'' +
                 ", background='" + background + '\'' +

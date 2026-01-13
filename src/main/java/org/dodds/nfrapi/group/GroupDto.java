@@ -2,6 +2,7 @@ package org.dodds.nfrapi.group;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.dodds.nfrapi.requirement.RequirementDto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

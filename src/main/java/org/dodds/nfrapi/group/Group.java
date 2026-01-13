@@ -9,8 +9,8 @@ import org.dodds.nfrapi.requirement.Requirement;
 import org.hibernate.annotations.GeneratedColumn;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -32,7 +32,6 @@ public class Group {
     @Column(name = "group_desc")
     private String description;
 
-    @GeneratedColumn(value = "1")
     @Column(name = "is_active", insertable = false, nullable = false)
     private Boolean active;
 
@@ -44,8 +43,28 @@ public class Group {
     @Column(name = "updated_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime updatedMoment;
 
-//    @OneToMany(mappedBy = "group", fetch = FetchType.LAZY)
-//    private Set<Requirement> requirements = new HashSet<>();
+    // we don't want to delete requirements if we delete a group
+    @OneToMany(mappedBy = "group",
+               cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+    private List<Requirement> requirements;
+
+    public Group(UUID id, String name, String description, Boolean active, LocalDateTime createdMoment, LocalDateTime updatedMoment) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.active = active;
+        this.createdMoment = createdMoment;
+        this.updatedMoment = updatedMoment;
+    }
+
+    // set up bidirectional
+    public void add(Requirement requirement) {
+        if(requirements == null) {
+            requirements = new ArrayList<>();
+        }
+        requirements.add(requirement);
+        requirement.setGroup(this);
+    }
 
     @Override
     public String toString() {

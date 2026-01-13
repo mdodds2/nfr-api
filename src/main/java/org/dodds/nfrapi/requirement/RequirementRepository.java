@@ -9,4 +9,6 @@ import java.util.UUID;
 @Repository
 public interface RequirementRepository extends JpaRepository<Requirement, UUID> {
     List<Requirement> findByActive(boolean isActive);
+    List<Requirement> findByGroupId(UUID groupId);
+    boolean existsByName(String name);
 }

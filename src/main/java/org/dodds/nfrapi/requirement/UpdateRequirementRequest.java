@@ -2,20 +2,16 @@ package org.dodds.nfrapi.requirement;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @AllArgsConstructor
 @Data
-public class RequirementDto {
-
-    private UUID id;
+public class UpdateRequirementRequest {
     private UUID groupId;
     private String name;
     private String description;
     private String background;
     private Boolean active;
-    private LocalDateTime createdMoment;
-    private LocalDateTime updatedMoment;
 }
