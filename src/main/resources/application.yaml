@@ -1,9 +1,19 @@
 spring:
   application:
     name: nfr-api
+  jwt:
+    secret: ${JWT_SECRET}
+    accessTokenExpiration: 3600 # 1 H
+    refreshTokenExpiration: 604800 # 7 days
   datasource:
     url: jdbc:mysql://localhost:3306/nfr?createDatabaseIfNotExist=true
     username: nfr
     password: nfr4dev
   jpa:
     show-sql: true
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG

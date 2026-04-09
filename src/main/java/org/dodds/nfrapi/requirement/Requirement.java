@@ -5,10 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.dodds.nfrapi.group.Group;
+import org.dodds.nfrapi.category.SubCategory;
+import org.dodds.nfrapi.report.Report;
 import org.hibernate.annotations.GeneratedColumn;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -16,33 +19,37 @@ import java.util.UUID;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "nfr_requirement")
+@Table(name = "requirements")
 public class Requirement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "rqmt_id")
+    @Column(name = "nfr_id")
     private UUID id;
 
-//    @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
-//    @JoinColumn(name = "group_id", nullable = false)
-//    private Group group;
+    @Column(name = "identifier")
+    private String identifier;
 
-    @Column(name = "group_id")
-    private UUID groupId;
+    @Column(name = "title")
+    private String title;
 
-    @Column(name = "rqmt_name")
-    private String name;
-
-    @Column(name = "rqmt_description")
+    @Column(name = "description")
     private String description;
 
-    @Column(name = "rqmt_background")
-    private String background;
+    @Column(name = "priority")
+    private String priority;
 
-    @GeneratedColumn(value = "1")
-    @Column(name = "is_active", insertable = false, nullable = false)
-    private Boolean active;
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "rationale")
+    private String rationale;
+
+    @Column(name = "source")
+    private String source;
+
+    @Column(name = "risk_if_violated")
+    private String riskIfViolated;
 
     @GeneratedColumn(value = "CURRENT_TIMESTAMP")
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
@@ -52,17 +59,44 @@ public class Requirement {
     @Column(name = "updated_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime updatedMoment;
 
+    // we don't want to delete a group if we delete a requirement (ie cascading delete)
+    @ManyToOne(fetch=FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE,
+                                                CascadeType.DETACH, CascadeType.REFRESH})
+    @JoinColumn(name = "category_sub_id")
+    private SubCategory subCategory;
+
+    @ManyToMany(mappedBy = "reportRequirements")
+    private Set<Report> reports = new HashSet<>();
+
+    public Requirement(UUID id, String identifier, String title, String description, String priority, String status, String rationale, String source, String riskIfViolated, LocalDateTime createdMoment, LocalDateTime updatedMoment) {
+        this.id = id;
+        this.identifier = identifier;
+        this.title = title;
+        this.description = description;
+        this.priority = priority;
+        this.status = status;
+        this.rationale = rationale;
+        this.source = source;
+        this.riskIfViolated = riskIfViolated;
+        this.createdMoment = createdMoment;
+        this.updatedMoment = updatedMoment;
+    }
+
     @Override
     public String toString() {
         return "Requirement{" +
                 "id=" + id +
-                ", group=" + groupId +
-                ", name=" + name +
+                ", identifier='" + identifier + '\'' +
+                ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
-                ", background='" + background + '\'' +
-                ", active=" + active +
+                ", priority=" + priority +
+                ", status=" + status +
+                ", rationale='" + rationale + '\'' +
+                ", source='" + source + '\'' +
+                ", riskIfViolated='" + riskIfViolated + '\'' +
                 ", createdMoment=" + createdMoment +
                 ", updatedMoment=" + updatedMoment +
+                ", subCategory=" + subCategory +
                 '}';
     }
 }
