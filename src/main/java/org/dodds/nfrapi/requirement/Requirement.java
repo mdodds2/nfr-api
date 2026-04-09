@@ -5,10 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.dodds.nfrapi.group.Group;
+import org.dodds.nfrapi.category.SubCategory;
+import org.dodds.nfrapi.report.Report;
 import org.hibernate.annotations.GeneratedColumn;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -16,25 +19,37 @@ import java.util.UUID;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "nfr_requirement")
+@Table(name = "requirements")
 public class Requirement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "rqmt_id")
+    @Column(name = "nfr_id")
     private UUID id;
 
-    @Column(name = "rqmt_name")
-    private String name;
+    @Column(name = "identifier")
+    private String identifier;
 
-    @Column(name = "rqmt_description")
+    @Column(name = "title")
+    private String title;
+
+    @Column(name = "description")
     private String description;
 
-    @Column(name = "rqmt_background")
-    private String background;
+    @Column(name = "priority")
+    private String priority;
 
-    @Column(name = "is_active", insertable = false, nullable = false)
-    private Boolean active;
+    @Column(name = "status")
+    private String status;
+
+    @Column(name = "rationale")
+    private String rationale;
+
+    @Column(name = "source")
+    private String source;
+
+    @Column(name = "risk_if_violated")
+    private String riskIfViolated;
 
     @GeneratedColumn(value = "CURRENT_TIMESTAMP")
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
@@ -47,15 +62,22 @@ public class Requirement {
     // we don't want to delete a group if we delete a requirement (ie cascading delete)
     @ManyToOne(fetch=FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE,
                                                 CascadeType.DETACH, CascadeType.REFRESH})
-    @JoinColumn(name = "group_id")
-    private Group group;
+    @JoinColumn(name = "category_sub_id")
+    private SubCategory subCategory;
 
-    public Requirement(UUID id, String name, String description, String background, Boolean active, LocalDateTime createdMoment, LocalDateTime updatedMoment) {
+    @ManyToMany(mappedBy = "reportRequirements")
+    private Set<Report> reports = new HashSet<>();
+
+    public Requirement(UUID id, String identifier, String title, String description, String priority, String status, String rationale, String source, String riskIfViolated, LocalDateTime createdMoment, LocalDateTime updatedMoment) {
         this.id = id;
-        this.name = name;
+        this.identifier = identifier;
+        this.title = title;
         this.description = description;
-        this.background = background;
-        this.active = active;
+        this.priority = priority;
+        this.status = status;
+        this.rationale = rationale;
+        this.source = source;
+        this.riskIfViolated = riskIfViolated;
         this.createdMoment = createdMoment;
         this.updatedMoment = updatedMoment;
     }
@@ -64,12 +86,17 @@ public class Requirement {
     public String toString() {
         return "Requirement{" +
                 "id=" + id +
-                ", name=" + name +
+                ", identifier='" + identifier + '\'' +
+                ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
-                ", background='" + background + '\'' +
-                ", active=" + active +
+                ", priority=" + priority +
+                ", status=" + status +
+                ", rationale='" + rationale + '\'' +
+                ", source='" + source + '\'' +
+                ", riskIfViolated='" + riskIfViolated + '\'' +
                 ", createdMoment=" + createdMoment +
                 ", updatedMoment=" + updatedMoment +
+                ", subCategory=" + subCategory +
                 '}';
     }
 }

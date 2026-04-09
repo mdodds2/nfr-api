@@ -1,14 +1,18 @@
 package org.dodds.nfrapi.requirement;
 
-import org.dodds.nfrapi.group.Group;
-import org.dodds.nfrapi.group.GroupNotFoundException;
-import org.dodds.nfrapi.group.GroupRepository;
+import jakarta.persistence.Column;
+import org.dodds.nfrapi.category.SubCategory;
+import org.dodds.nfrapi.category.SubCategoryNotFoundException;
+import org.dodds.nfrapi.category.SubCategoryRepository;
+
+import org.hibernate.annotations.GeneratedColumn;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +27,7 @@ import static org.mockito.Mockito.when;
 class RequirementServiceTest {
 
     @Mock
-    GroupRepository groupRepository;
+    SubCategoryRepository subCategoryRepository;
 
     @Mock
     RequirementRepository requirementRepository;
@@ -37,7 +41,7 @@ class RequirementServiceTest {
     @Test
     void shouldReturnAllRequirements() {
         // Arrange
-        when(requirementRepository.findByActive(true)).thenReturn(new ArrayList<>());
+        when(requirementRepository.findAll()).thenReturn(new ArrayList<>());
 
         // Act
         var requirementsList = requirementService.getAllRequirements();
@@ -50,32 +54,48 @@ class RequirementServiceTest {
     void shouldReturnARequirement() {
         // Arrange
         UUID uuid = UUID.randomUUID();
-        UUID groupId = UUID.randomUUID();
+        UUID subCategoryId = UUID.randomUUID();
 
-        Group group = new Group(groupId,
-                "test group name",
-                "test group description",
-                true,
-                null,
-                null);
-
-        Requirement mockRequirement = new Requirement(uuid,
-                "test requirement name",
-                "test requirement description",
-                "test requirement background",
-                true,
-                null,
-                null);
-        mockRequirement.setGroup(group);
-
-        RequirementDto mockDto = new RequirementDto(uuid,
+        SubCategory subCategory = new SubCategory(
                 uuid,
-                "test requirement name",
-                "test requirement description",
-                "test requirement background",
+                "test subCategory name",
+                "shortName",
+                "test subCategory description",
+                1,
                 true,
                 null,
                 null);
+
+        Requirement mockRequirement = new Requirement(
+            uuid,
+            "test requirement identifier",
+            "test requirement title",
+            "test requirement description",
+            "Low",
+            "Approved",
+            "rationale",
+            "source",
+            "riskIfViolated",
+            null,
+            null
+        );
+        mockRequirement.setSubCategory(subCategory);
+
+        RequirementDto mockDto = new RequirementDto(
+                uuid,
+                subCategoryId,
+                "test requirement identifier",
+                "test requirement title",
+                "test requirement description",
+                "Low",
+                "Approved",
+                "rationale",
+                "source",
+                "riskIfViolated",
+                null,
+                null,
+                null
+        );
 
         // Act
         when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
@@ -85,10 +105,13 @@ class RequirementServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(result.getId(), mockRequirement.getId());
-        assertEquals(result.getName(), mockRequirement.getName());
+        assertEquals(result.getIdentifier(), mockRequirement.getIdentifier());
         assertEquals(result.getDescription(), mockRequirement.getDescription());
-        assertEquals(result.getBackground(), mockRequirement.getBackground());
-        assertEquals(result.getActive(), mockRequirement.getActive());
+        assertEquals(result.getPriority(), mockRequirement.getPriority());
+        assertEquals(result.getStatus(), mockRequirement.getStatus());
+        assertEquals(result.getRationale(), mockRequirement.getRationale());
+        assertEquals(result.getSource(), mockRequirement.getSource());
+        assertEquals(result.getRiskIfViolated(), mockRequirement.getRiskIfViolated());
     }
 
     @Test
@@ -102,21 +125,27 @@ class RequirementServiceTest {
     }
 
     @Test
-    void shouldReturnAListOfRequirementsByGroupId() {
+    void shouldReturnAListOfRequirementsBySubCategoryId() {
         // Arrange
-        UUID groupId = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        UUID subCategoryId = UUID.randomUUID();
 
-        Group group = new Group(groupId,
-                "test group name",
-                "test group description",
+        SubCategory subCategory = new SubCategory(
+                categoryId,
+                "test subCategory name",
+                "shortName",
+                "test subCategory description",
+                1,
                 true,
                 null,
-                null);
+                null,
+                null
+        );
+
 
         // Act
-        when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
-        when(requirementRepository.findByGroupId(groupId)).thenReturn(new ArrayList<>());
-        List<RequirementDto> requirements = requirementService.getRequirementsByGroup(groupId);
+        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
+        List<RequirementDto> requirements = requirementService.getRequirementsBySubCategory(subCategoryId, "");
 
         // Assert
         assertNotNull(requirements);
@@ -125,166 +154,245 @@ class RequirementServiceTest {
     @Test
     void shouldNotReturnAListOfRequirementsByGroupIdAndThrowAnException() {
         // Arrange
-        UUID groupId = UUID.randomUUID();
+        UUID uuid = UUID.randomUUID();
 
         // Act / Assert
-        when(groupRepository.findById(groupId)).thenReturn(Optional.empty());
-        assertThrows(GroupNotFoundException.class, () -> requirementService.getRequirementsByGroup(groupId));
+        when(subCategoryRepository.findById(uuid)).thenReturn(Optional.empty());
+        assertThrows(SubCategoryNotFoundException.class, () -> requirementService.getRequirementsBySubCategory(uuid, null));
     }
 
     @Test
     void shouldCreateARequirement() {
         // Arrange
         UUID uuid = UUID.randomUUID();
-        UUID groupId = UUID.randomUUID();
+        UUID subCategoryId = UUID.randomUUID();
 
         CreateRequirementRequest request = new CreateRequirementRequest(
-                groupId,
-                "test requirement name",
-                "test requirement description",
-                "test requirement background"
+            subCategoryId,
+            "test requirement identifier",
+            "test requirement title",
+            "test requirement description",
+            "Low",
+            "Approved",
+            "value",
+            "threshold",
+            "unit",
+            "measurementMethod",
+            "rationale",
+            "source",
+            "riskIfViolated"
         );
 
-        Group group = new Group(
-                groupId,
-                "test group name",
-                "test group description",
+        SubCategory subCategory = new SubCategory(
+                uuid,
+                "test subCategory name",
+                "shortName",
+                "test subCategory description",
+                1,
                 true,
                 null,
-                null);
+                null
+        );
 
         Requirement mockRequirement = new Requirement(
                 uuid,
-                "test requirement name",
+                "test requirement identifier",
+                "test requirement title",
                 "test requirement description",
-                "test requirement background",
-                true,
+                "Low",
+                "Approved",
+                "rationale",
+                "source",
+                "riskIfViolated",
                 null,
-                null);
-        mockRequirement.setGroup(group);
+                null
+        );
+
+        mockRequirement.setSubCategory(subCategory);
 
         RequirementDto mockDto = new RequirementDto(
-                uuid,
-                groupId,
-                "test requirement name",
-                "test requirement description",
-                "test requirement background",
-                true,
-                null,
-                null);
+            uuid,
+            subCategoryId,
+            "test requirement identifier",
+            "test requirement title",
+            "test requirement description",
+            "Low",
+            "Approved",
+            "rationale",
+            "source",
+            "riskIfViolated",
+            null,
+            null,
+            null
+        );
 
         // Act
-        when(requirementRepository.existsByName(anyString())).thenReturn(false);
-        when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(requirementRepository.existsByTitle(anyString())).thenReturn(false);
+        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
         when(requirementMapper.toEntityFromCreateRequirementRequest(request)).thenReturn(mockRequirement);
         when(requirementMapper.toDto(mockRequirement)).thenReturn(mockDto);
         RequirementDto result = requirementService.createRequirement(request);
 
         // Assert
         assertNotNull(result);
-        assertEquals(result.getGroupId(), request.getGroupId());
-        assertEquals(result.getName(), request.getName());
+        assertEquals(result.getSubCategoryId(), request.getSubCategoryId());
+        assertEquals(result.getIdentifier(), request.getIdentifier());
+        assertEquals(result.getTitle(), request.getTitle());
         assertEquals(result.getDescription(), request.getDescription());
-        assertEquals(result.getBackground(), request.getBackground());
+        assertEquals(result.getPriority(), request.getPriority());
+        assertEquals(result.getStatus(), request.getStatus());
+        assertEquals(result.getRationale(), request.getRationale());
+        assertEquals(result.getSource(), request.getSource());
+        assertEquals(result.getRiskIfViolated(), request.getRiskIfViolated());
     }
 
     @Test
     void shouldNotCreateARequirementAndThrowAnException() {
         // Arrange
-        UUID groupId = UUID.randomUUID();
+        UUID uuid = UUID.randomUUID();
 
         CreateRequirementRequest request = new CreateRequirementRequest(
-                groupId,
-                "test requirement name",
+                uuid,
+                "test requirement identifier",
+                "test requirement title",
                 "test requirement description",
-                "test requirement background"
+                "Low",
+                "Approved",
+                "value",
+                "threshold",
+                "unit",
+                "measurementMethod",
+                "rationale",
+                "source",
+                "riskIfViolated"
         );
 
         // Act / Assert
-        when(requirementRepository.existsByName(any())).thenReturn(true);
+        when(requirementRepository.existsByTitle(any())).thenReturn(true);
         assertThrows(DuplicateRequirementException.class, () -> requirementService.createRequirement(request));
     }
 
     @Test
     void shouldNotCreateARequirementAndThrowAnException2() {
         // Arrange
-        UUID groupId = UUID.randomUUID();
+        UUID uuid = UUID.randomUUID();
+        UUID subCategoryId = UUID.randomUUID();
 
         CreateRequirementRequest request = new CreateRequirementRequest(
-                groupId,
-                "test requirement name",
-                "test requirement description",
-                "test requirement background"
+            uuid,
+            "test requirement identifier",
+            "test requirement title",
+            "test requirement description",
+            "Low",
+            "Approved",
+            "value",
+            "threshold",
+            "unit",
+            "measurementMethod",
+            "rationale",
+            "source",
+            "riskIfViolated"
         );
 
-        Group group = new Group(
-                groupId,
-                "test group name",
-                "test group description",
-                true,
-                null,
-                null);
+        SubCategory subCategory = new SubCategory(
+            uuid,
+            "test subCategory name",
+            "shortName",
+            "test subCategory description",
+            1,
+            true,
+            null,
+            null
+        );
 
         Requirement mockRequirement = new Requirement(
-                UUID.randomUUID(),
-                "test requirement name",
-                "test requirement description",
-                "test requirement background",
-                true,
-                null,
-                null);
-        mockRequirement.setGroup(group);
+            uuid,
+            "test requirement identifier",
+            "test requirement title",
+            "test requirement description",
+            "Low",
+            "Approved",
+            "rationale",
+            "source",
+            "riskIfViolated",
+            null,
+            null
+        );
+        mockRequirement.setSubCategory(subCategory);
 
         // Act / Assert
-        when(requirementRepository.existsByName(any())).thenReturn(false);
-        when(groupRepository.findById(groupId)).thenReturn(Optional.empty());
+        when(requirementRepository.existsByTitle(any())).thenReturn(false);
+        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.empty());
         when(requirementMapper.toEntityFromCreateRequirementRequest(request)).thenReturn(mockRequirement);
-        assertThrows(GroupNotFoundException.class, () -> requirementService.createRequirement(request));
+        assertThrows(SubCategoryNotFoundException.class, () -> requirementService.createRequirement(request));
     }
 
     @Test
     void shouldUpdateARequirement() {
         // Arrange
         UUID uuid = UUID.randomUUID();
-        UUID groupId = UUID.randomUUID();
-        UpdateRequirementRequest request = new UpdateRequirementRequest(
-                groupId,
-                "test request name",
-                "test request description",
-                "test request background",
-                true);
+        UUID subCategoryId = UUID.randomUUID();
 
-        Group group = new Group(
-                groupId,
-                "test group name",
-                "test group description",
+        UpdateRequirementRequest request = new UpdateRequirementRequest(
+                "test requirement identifier",
+                "test requirement title",
+                "test requirement description",
+                "Low",
+                "Approved",
+                "value",
+                "threshold",
+                "unit",
+                "measurementMethod",
+                "rationale",
+                "source",
+                "riskIfViolated"
+        );
+
+        SubCategory subCategory = new SubCategory(
+                uuid,
+                "test subCategory name",
+                "shortName",
+                "test subCategory description",
+                1,
                 true,
                 null,
-                null);
+                null
+        );
 
         Requirement mockRequirement = new Requirement(
-                UUID.randomUUID(),
-                "test requirement name",
+                uuid,
+                "test requirement identifier",
+                "test requirement title",
                 "test requirement description",
-                "test requirement background",
-                true,
+                "Low",
+                "Approved",
+                "rationale",
+                "source",
+                "riskIfViolated",
                 null,
-                null);
-        mockRequirement.setGroup(group);
+                null
+        );
+        mockRequirement.setSubCategory(subCategory);
 
         RequirementDto mockDto = new RequirementDto(
                 uuid,
-                groupId,
-                "test requirement name",
+                subCategoryId,
+                "test requirement identifier",
+                "test requirement title",
                 "test requirement description",
-                "test requirement background",
-                true,
+                "Low",
+                "Approved",
+                "rationale",
+                "source",
+                "riskIfViolated",
                 null,
-                null);
+                null,
+                null
+        );
 
         // Act
         when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
-        when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
         //when(requirementMapper.toEntityFromUpdateRequirementRequest(any())).thenReturn(mockRequirement);
         when(requirementMapper.toDto(any())).thenReturn(mockDto);
         var result = requirementService.updateRequirement(uuid, request);
@@ -297,13 +405,21 @@ class RequirementServiceTest {
     void shouldNotUpdateARequirementAndThrowAnException() {
         // Arrange
         UUID uuid = UUID.randomUUID();
-        UUID groupId = UUID.randomUUID();
+        UUID subCategoryId = UUID.randomUUID();
         UpdateRequirementRequest request = new UpdateRequirementRequest(
-                groupId,
-                "test request name",
-                "test request description",
-                "test request background",
-                true);
+                "test requirement identifier",
+                "test requirement title",
+                "test requirement description",
+                "Low",
+                "Approved",
+                "value",
+                "threshold",
+                "unit",
+                "measurementMethod",
+                "rationale",
+                "source",
+                "riskIfViolated"
+        );
 
         // Act / Assert
         when(requirementRepository.findById(uuid)).thenReturn(Optional.empty());
@@ -314,35 +430,51 @@ class RequirementServiceTest {
     void shouldNotUpdateARequirementAndThrowAnException2() {
         // Arrange
         UUID uuid = UUID.randomUUID();
-        UUID groupId = UUID.randomUUID();
+        UUID subCategoryId = UUID.randomUUID();
         UpdateRequirementRequest request = new UpdateRequirementRequest(
-                groupId,
-                "test request name",
-                "test request description",
-                "test request background",
-                true);
+                "test requirement identifier",
+                "test requirement title",
+                "test requirement description",
+                "Low",
+                "Approved",
+                "value",
+                "threshold",
+                "unit",
+                "measurementMethod",
+                "rationale",
+                "source",
+                "riskIfViolated"
+        );
 
-        Group group = new Group(
-                groupId,
-                "test group name",
-                "test group description",
+        SubCategory subCategory = new SubCategory(
+                uuid,
+                "test subCategory name",
+                "shortName",
+                "test subCategory description",
+                1,
                 true,
                 null,
-                null);
+                null
+        );
 
         Requirement mockRequirement = new Requirement(
-                UUID.randomUUID(),
-                "test requirement name",
+                uuid,
+                "test requirement identifier",
+                "test requirement title",
                 "test requirement description",
-                "test requirement background",
-                true,
+                "Low",
+                "Approved",
+                "rationale",
+                "source",
+                "riskIfViolated",
                 null,
-                null);
-        mockRequirement.setGroup(group);
+                null
+        );
+        mockRequirement.setSubCategory(subCategory);
 
         // Act / Assert
         when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
-        assertThrows(GroupNotFoundException.class, () -> requirementService.updateRequirement(uuid, request));
+        assertThrows(SubCategoryNotFoundException.class, () -> requirementService.updateRequirement(uuid, request));
     }
 
     @Test
@@ -351,13 +483,18 @@ class RequirementServiceTest {
         UUID uuid = UUID.randomUUID();
 
         Requirement mockRequirement = new Requirement(
-                UUID.randomUUID(),
-                "test requirement name",
+                uuid,
+                "test requirement identifier",
+                "test requirement title",
                 "test requirement description",
-                "test requirement background",
-                true,
+                "Low",
+                "Approved",
+                "rationale",
+                "source",
+                "riskIfViolated",
                 null,
-                null);
+                null
+        );
 
         // Act
         when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));

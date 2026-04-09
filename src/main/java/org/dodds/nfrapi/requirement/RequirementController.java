@@ -21,14 +21,21 @@ public class RequirementController {
         return requirementService.getAllRequirements();
     }
 
-    @GetMapping("/group/{groupId}")
-    public List<RequirementDto> getAllRequirementsForGroup(@PathVariable UUID groupId) {
-        return requirementService.getRequirementsByGroup(groupId);
+    @GetMapping("/subCategory/{subCategoryId}")
+    public List<RequirementDto> getAllRequirementsForSubCategory(
+            @PathVariable UUID subCategoryId,
+            @RequestParam(required = false, defaultValue = "identifier", name = "sort") String sortBy) {
+        return requirementService.getRequirementsBySubCategory(subCategoryId, sortBy);
     }
 
     @GetMapping("/{id}")
     public RequirementDto getRequirement(@PathVariable UUID id) {
         return requirementService.getRequirement(id);
+    }
+
+    @GetMapping("/nextIdentifier/{categoryId}/{subCategoryId}")
+    public NextIdentifierDto getNextIdentifier(@PathVariable UUID categoryId, @PathVariable UUID subCategoryId) {
+        return requirementService.getNextIdentifier(categoryId, subCategoryId);
     }
 
     @PostMapping
@@ -53,7 +60,7 @@ public class RequirementController {
 
     @ExceptionHandler(DuplicateRequirementException.class)
     public ResponseEntity<ErrorDto> handleDuplicateRequirementException(DuplicateRequirementException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new ErrorDto(ex.getMessage()));
     }
 
     @ExceptionHandler(RequirementNotFoundException.class)
