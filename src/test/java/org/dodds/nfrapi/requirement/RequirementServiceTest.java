@@ -109,7 +109,7 @@ class RequirementServiceTest {
     }
 
     @Test
-    void shouldNotReturnARequirementAndThrowAndException() {
+    void shouldNotReturnARequirementAndThrowAnException() {
         // Arrange
         var uuid = UUID.randomUUID();
 
@@ -259,7 +259,7 @@ class RequirementServiceTest {
     }
 
     @Test
-    void shouldNotCreateARequirementAndThrowAnException2() {
+    void shouldNotCreateARequirementAndThrowAnSubCategoryNotFoundException() {
         // Arrange
         UUID uuid = UUID.randomUUID();
         UUID subCategoryId = UUID.randomUUID();

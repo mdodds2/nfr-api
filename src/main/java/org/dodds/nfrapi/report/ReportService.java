@@ -88,13 +88,13 @@ public class ReportService {
 
     @Transactional
     public ReportDto createReport(CreateReportRequest request) {
-        if(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())) {
+        if(reportRepository.existsByUserIdAndName(request.userId(), request.name())) {
             throw new DuplicateReportException();
         }
         var report = reportMapper.toEntity(request);
 
         List<Requirement> requirementList = new ArrayList<>();
-        request.getRequirementIds().forEach((id) -> {
+        request.requirementIds().forEach((id) -> {
             Requirement req = requirementRepository.findById(id).orElseThrow(RequirementNotFoundException::new);
             requirementList.add(req);
         });
@@ -103,7 +103,7 @@ public class ReportService {
         reportRepository.save(report);
 
         Set<Measurement> measurementSet = new HashSet<>();
-        request.getMeasurements().forEach((measureDto) -> {
+        request.measurements().forEach((measureDto) -> {
             Measurement measure = measurementMapper.toEntity(measureDto);
             measure.setReport(report);
             measurementSet.add(measure);
