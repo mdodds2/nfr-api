@@ -19,6 +19,7 @@ import java.util.*;
 
 public class Report {
     @Id
+    @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private UUID id;
@@ -50,6 +51,7 @@ public class Report {
             inverseJoinColumns = @JoinColumn(name = "requirement_id"))
     private List<Requirement> reportRequirements;
 
+    @Builder.Default
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Measurement> measurements = new HashSet<>();
 
