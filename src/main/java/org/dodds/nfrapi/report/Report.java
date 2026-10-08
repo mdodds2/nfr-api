@@ -11,8 +11,9 @@ import java.util.*;
 @Entity
 @Setter
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "reports")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 

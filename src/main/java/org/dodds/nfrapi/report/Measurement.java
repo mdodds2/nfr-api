@@ -1,15 +1,18 @@
 package org.dodds.nfrapi.report;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import org.hibernate.annotations.GeneratedColumn;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "measurements")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Measurement {

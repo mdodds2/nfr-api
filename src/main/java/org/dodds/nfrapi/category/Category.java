@@ -1,10 +1,7 @@
 package org.dodds.nfrapi.category;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.GeneratedColumn;
 
 import java.time.LocalDateTime;
@@ -14,8 +11,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "category")
 public class Category {
     @Id

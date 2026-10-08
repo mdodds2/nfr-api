@@ -1,18 +1,15 @@
 package org.dodds.nfrapi.requirement;
 
-import jakarta.persistence.Column;
 import org.dodds.nfrapi.category.SubCategory;
 import org.dodds.nfrapi.category.SubCategoryNotFoundException;
 import org.dodds.nfrapi.category.SubCategoryRepository;
 
-import org.hibernate.annotations.GeneratedColumn;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -56,15 +53,13 @@ class RequirementServiceTest {
         UUID uuid = UUID.randomUUID();
         UUID subCategoryId = UUID.randomUUID();
 
-        SubCategory subCategory = new SubCategory(
-                uuid,
-                "test subCategory name",
-                "shortName",
-                "test subCategory description",
-                1,
-                true,
-                null,
-                null);
+        SubCategory subCategory = new SubCategory()
+            .id(uuid)
+            .name("test subCategory name")
+            .shortName("shortName")
+            .description("test subCategory description")
+            .sortOrder(1)
+            .active();
 
         Requirement mockRequirement = new Requirement(
             uuid,
@@ -127,11 +122,10 @@ class RequirementServiceTest {
     @Test
     void shouldReturnAListOfRequirementsBySubCategoryId() {
         // Arrange
-        UUID categoryId = UUID.randomUUID();
         UUID subCategoryId = UUID.randomUUID();
 
         SubCategory subCategory = new SubCategory(
-                categoryId,
+                subCategoryId,
                 "test subCategory name",
                 "shortName",
                 "test subCategory description",
