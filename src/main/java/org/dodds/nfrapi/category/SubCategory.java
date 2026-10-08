@@ -50,17 +50,4 @@ public class SubCategory {
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     private Category category;
 
-    /*
-    public SubCategory(UUID id, String name, String shortName, String description, Integer sortOrder, Boolean active, LocalDateTime createdAt, LocalDateTime modifiedAt) {
-        this.id = id;
-        this.name = name;
-        this.shortName = shortName;
-        this.description = description;
-        this.sortOrder = sortOrder;
-        this.active = active;
-        this.createdAt = createdAt;
-        this.modifiedAt = modifiedAt;
-    }
-     */
-
 }
