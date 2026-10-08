@@ -134,67 +134,23 @@ class ReportServiceTest {
 
     @DisplayName("Create report with an unknown requirement id")
     @Test
-    void createReportWithAnUnknownRequirementId() {
+    void CreateReportWithAnUnknownRequirementId() {
         // Arrange
-        List<UUID> reqts = new ArrayList<>();
-        reqts.add(UUID.randomUUID());
-
+        UUID unknownId = UUID.randomUUID();
         CreateReportRequest request = new CreateReportRequest(
                 UUID.randomUUID(),
                 "project name",
                 "project description",
-                reqts,
+                List.of(unknownId),
                 List.of());
-
         Report report = Report.builder().name(request.name()).build();
-        ReportDto dto = new ReportDto(UUID.randomUUID(),
-                request.userId(),
-                request.name(),
-                request.description(),
-                true,
-                null,
-                null,
-                null,
-                null);
-
-        Category category = new Category(UUID.randomUUID(), "name", "short name", "description", Integer.valueOf(1), true, null, null, null, List.of());
-
-        SubCategory subCategory = new SubCategory(
-                UUID.randomUUID(),
-                "name",
-                "short name",
-                "desc",
-                Integer.valueOf(1),
-                true,
-                null,
-                null,
-                category);
-
-        Requirement requirement = new Requirement(
-                UUID.randomUUID(),
-                "requirement identifier",
-                "title" ,
-                "description",
-                "HIGH",
-                "ACTIVE",
-                "RATIONALE",
-                "SOURCE",
-                "RISK IF VIOLATED",
-                null,
-                null,
-                subCategory,
-                null);
-
 
         when(reportRepository.existsByUserIdAndName(request.userId(), request.name())).thenReturn(false);
-        when(requirementRepository.findById(requirement.getId())).thenThrow(new RequirementNotFoundException());
         when(reportMapper.toEntity(request)).thenReturn(report);
+        when(requirementRepository.findById(unknownId)).thenReturn(Optional.empty());
 
-        // Act
-        ReportDto result = reportService.createReport(request);
-
-        // Assert
-        assertEquals(request.name(), result.getName());
+        // Act + Assert
+        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(request));
         verify(reportRepository, never()).save(any());
     }
 
