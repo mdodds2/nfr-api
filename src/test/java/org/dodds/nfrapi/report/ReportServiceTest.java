@@ -6,24 +6,28 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ReportServiceTest {
 
-    @InjectMocks
+    @Mock
     ReportRepository reportRepository;
 
-    @InjectMocks
+    @Mock
     RequirementRepository requirementRepository;
+
+    @Mock
+    ReportMapper reportMapper;
 
     @InjectMocks
     ReportService reportService;
@@ -32,26 +36,92 @@ public class ReportServiceTest {
     @Test
     void shouldCreateAReport() {
 
-        UUID userId = UUID.randomUUID();
-        String name = "project name";
-        String description = "project description";
-        List<UUID> requirementIds = new ArrayList<>();
-        List<MeasurementDto> measurements = new ArrayList<>();
-
         // Arrange
-        CreateReportRequest request  = new CreateReportRequest(
-                userId,
-                name,
-                description,
-                requirementIds,
-                measurements
-        );
+        CreateReportRequest request = new CreateReportRequest(
+                UUID.randomUUID(),
+                "project name",
+                "project description",
+                List.of(),
+                List.of());
+
+        Report report = Report.builder().name(request.name()).build();
+        ReportDto dto = new ReportDto(UUID.randomUUID(),
+                request.userId(),
+                request.name(),
+                request.description(),
+                true,
+                null,
+                null,
+                null,
+                null);
+
+        when(reportRepository.existsByUserIdAndName(request.userId(), request.name())).thenReturn(false);
+        when(reportMapper.toEntity(request)).thenReturn(report);
+        when(reportMapper.toDto(report)).thenReturn(dto);
 
         // Act
-        when(reportRepository.existsByUserIdAndName(request.userId(), request.name())).thenReturn(false);
-        when(requirementRepository.findById(any())).thenReturn(Optional.empty());
+        ReportDto result = reportService.createReport(request);
 
         // Assert
-        reportService.createReport(request);
+        assertEquals(request.name(), result.getName());
+        verify(reportRepository).save(report);
+
+    }
+
+    @DisplayName("Should create a mock report without error")
+    @Test
+    void existsByUserIdAndName() {
+
+        // Arrange
+        CreateReportRequest request = new CreateReportRequest(
+                UUID.randomUUID(),
+                "project name",
+                "project description",
+                List.of(),
+                List.of());
+
+        Report report = Report.builder().name(request.name()).build();
+        ReportDto dto = new ReportDto(UUID.randomUUID(),
+                request.userId(),
+                request.name(),
+                request.description(),
+                true,
+                null,
+                null,
+                null,
+                null);
+
+        when(reportRepository.existsByUserIdAndName(request.userId(), request.name())).thenReturn(true);
+
+        // Act
+
+        // Assert
+        assertThrows(DuplicateReportException.class, () -> reportService.createReport(request));
+
+    }
+
+    @DisplayName("Should return a report")
+    @Test
+    void findById() {
+        // Arrange
+        UUID uuid = UUID.randomUUID();
+        Report report = Report.builder().name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
+        ReportDto dto = new ReportDto(uuid,
+                report.getUserId(),
+                report.getName(),
+                report.getDescription(),
+                true,
+                null,
+                null,
+                null,
+                null);
+
+        // Act
+        when(reportRepository.findById(uuid)).thenReturn(Optional.ofNullable(report));
+        when(reportMapper.toDto(any())).thenReturn(dto);
+        ReportDto result = reportService.getReport(uuid);
+
+        // Assert
+        assertEquals(uuid, result.getId());
     }
 }

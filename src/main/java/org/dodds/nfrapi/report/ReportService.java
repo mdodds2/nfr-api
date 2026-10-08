@@ -110,7 +110,7 @@ public class ReportService {
         });
         report.setMeasurements(measurementSet);
 
-        reportRepository.flush();;
+        reportRepository.flush();
 
         var reportDto = reportMapper.toDto(report);
         List<RequirementDto> requirementDtos = new ArrayList<>();
@@ -137,8 +137,6 @@ public class ReportService {
             Measurement measure = measurementMapper.toEntity(measureDto);
             measure.setReport(report);
             measurementSet.add(measure);
-
-            System.out.println("Mike:" + measure.getId());
         });
         report.setMeasurements(measurementSet);
 
