@@ -36,17 +36,17 @@ public class Requirement {
     @Column(name = "description")
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority")
     private Priority priority;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private Status status;
 
-    @Enumerated
     @Column(name = "rationale")
     private String rationale;
 
-    @Enumerated
     @Column(name = "source")
     private String source;
 

@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.dodds.nfrapi.common.Priority;
 import org.dodds.nfrapi.common.Status;
-import org.dodds.nfrapi.report.ReportDto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
