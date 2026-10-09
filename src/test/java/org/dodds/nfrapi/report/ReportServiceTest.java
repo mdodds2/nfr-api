@@ -134,7 +134,7 @@ class ReportServiceTest {
 
     @DisplayName("Create report with an unknown requirement id")
     @Test
-    void CreateReportWithAnUnknownRequirementId() {
+    void createReportWithAnUnknownRequirementId() {
         // Arrange
         UUID unknownId = UUID.randomUUID();
         CreateReportRequest request = new CreateReportRequest(
