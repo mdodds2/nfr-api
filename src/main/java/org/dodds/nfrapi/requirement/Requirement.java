@@ -3,6 +3,8 @@ package org.dodds.nfrapi.requirement;
 import jakarta.persistence.*;
 import lombok.*;
 import org.dodds.nfrapi.category.SubCategory;
+import org.dodds.nfrapi.common.Priority;
+import org.dodds.nfrapi.common.Status;
 import org.dodds.nfrapi.report.Report;
 import org.hibernate.annotations.GeneratedColumn;
 
@@ -35,10 +37,10 @@ public class Requirement {
     private String description;
 
     @Column(name = "priority")
-    private String priority;
+    private Priority priority;
 
     @Column(name = "status")
-    private String status;
+    private Status status;
 
     @Column(name = "rationale")
     private String rationale;

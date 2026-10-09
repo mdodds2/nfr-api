@@ -6,7 +6,7 @@ import org.mapstruct.*;
 public interface RequirementMapper {
 
     @Mapping(target = "subCategoryId", source="subCategory.id")
-    @Mapping(target = "reports", ignore = true)
+    //@Mapping(target = "reports", ignore = true)
     RequirementDto toDto(Requirement requirement);
 
     @Mapping(source = "subCategoryId", target="subCategory.id")

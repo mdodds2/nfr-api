@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.dodds.nfrapi.common.Priority;
+import org.dodds.nfrapi.common.Status;
 import org.dodds.nfrapi.report.ReportDto;
 
 import java.time.LocalDateTime;
@@ -20,12 +22,12 @@ public class RequirementDto {
     private String identifier;
     private String title;
     private String description;
-    private String priority;
-    private String status;
+    private Priority priority;
+    private Status status;
     private String rationale;
     private String source;
     private String riskIfViolated;
     private LocalDateTime createdMoment;
     private LocalDateTime updatedMoment;
-    private List<ReportDto> reports;
+    //private List<ReportDto> reports;
 }
