@@ -1,7 +1,11 @@
 package org.dodds.nfrapi.common;
 
 public enum Priority {
-    LOW,
+    CRITICAL,
+    HIGH,
     MEDIUM,
-    HIGH
+    LOW,
+    OPTIONAL;
+
+
 }

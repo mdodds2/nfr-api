@@ -9,7 +9,6 @@ import org.dodds.nfrapi.common.Status;
 import org.dodds.nfrapi.report.ReportDto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -29,5 +28,4 @@ public class RequirementDto {
     private String riskIfViolated;
     private LocalDateTime createdMoment;
     private LocalDateTime updatedMoment;
-    //private List<ReportDto> reports;
 }

@@ -42,9 +42,11 @@ public class Requirement {
     @Column(name = "status")
     private Status status;
 
+    @Enumerated
     @Column(name = "rationale")
     private String rationale;
 
+    @Enumerated
     @Column(name = "source")
     private String source;
 

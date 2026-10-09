@@ -17,7 +17,6 @@ public interface RequirementMapper {
     @Mapping(target = "createdMoment", ignore = true)
     @Mapping(target = "updatedMoment", ignore = true)
     @Mapping(source = "subCategoryId", target="subCategory.id")
-    @Mapping(target = "reports", ignore = true)
     Requirement toEntityFromCreateRequirementRequest(CreateRequirementRequest request);
 
     @Mapping(target = "id", ignore = true)

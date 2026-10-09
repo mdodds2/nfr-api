@@ -1,7 +1,10 @@
 package org.dodds.nfrapi.common;
 
 public enum Status {
+    DRAFT,
+    PROPOSED,
     APPROVED,
-    PENDING,
-    RETIRED
+    DEPRECATED,
+    VERIFIED,
+    REJECTED;
 }
