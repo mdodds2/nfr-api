@@ -1,14 +1,18 @@
 package org.dodds.nfrapi.requirement;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.dodds.nfrapi.report.ReportDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Data
 public class RequirementDto {
     private UUID id;

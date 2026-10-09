@@ -2,9 +2,7 @@ package org.dodds.nfrapi.report;
 
 import org.dodds.nfrapi.category.Category;
 import org.dodds.nfrapi.category.SubCategory;
-import org.dodds.nfrapi.requirement.Requirement;
-import org.dodds.nfrapi.requirement.RequirementNotFoundException;
-import org.dodds.nfrapi.requirement.RequirementRepository;
+import org.dodds.nfrapi.requirement.*;
 import org.hibernate.sql.Update;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -31,6 +30,12 @@ class ReportServiceTest {
     @Mock
     ReportMapper reportMapper;
 
+    @Mock
+    RequirementMapper requirementMapper;
+
+    @Mock
+    MeasurementMapper measurementMapper;
+
     @InjectMocks
     ReportService reportService;
 
@@ -46,16 +51,21 @@ class ReportServiceTest {
                 List.of(),
                 List.of());
 
+        List<RequirementDto> requirements = new ArrayList<>();
+        requirements.add(RequirementDto.builder().id(UUID.randomUUID()).build());
+        List<MeasurementDto> measurements = new ArrayList<>();
+        measurements.add(MeasurementDto.builder().id(UUID.randomUUID()).build());
+
         Report report = Report.builder().name(request.name()).build();
-        ReportDto dto = new ReportDto(UUID.randomUUID(),
-                request.userId(),
-                request.name(),
-                request.description(),
-                true,
-                null,
-                null,
-                null,
-                null);
+        ReportDto dto = ReportDto.builder().
+                id(UUID.randomUUID()).
+                userId(request.userId()).
+                name(request.name()).
+                description(request.description()).
+                active(true).
+                requirements(requirements).
+                measurements(measurements).build();
+
 
         when(reportRepository.existsByUserIdAndName(request.userId(), request.name())).thenReturn(false);
         when(reportMapper.toEntity(request)).thenReturn(report);
@@ -94,29 +104,25 @@ class ReportServiceTest {
     @DisplayName("Should return a report")
     @Test
     void shouldReturnReportWhenIdExists() {
-        // Arrange
         UUID uuid = UUID.randomUUID();
-        Report report = Report.builder().name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
-        ReportDto dto = new ReportDto(uuid,
-                report.getUserId(),
-                report.getName(),
-                report.getDescription(),
-                true,
-                null,
-                null,
-                null,
-                null);
+
+        Requirement requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        Measurement measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        Report report = Report.builder().id(uuid).name("report name")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement)).build();
+
+        RequirementDto requirementDto = RequirementDto.builder().id(requirement.getId()).build();
+        MeasurementDto measurementDto = new MeasurementDto(/* fill in its fields */);
 
         when(reportRepository.findById(uuid)).thenReturn(Optional.of(report));
-        when(reportMapper.toDto(report)).thenReturn(dto);
-
-        // Act
+        when(reportMapper.toDto(report)).thenReturn(ReportDto.builder().id(UUID.randomUUID()).build());
+        when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
+        when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
         ReportDto result = reportService.getReport(uuid);
 
-        // Assert
-        assertEquals(uuid, result.getId());
-        assertTrue(result.getRequirements().isEmpty());
-        assertTrue(result.getMeasurements().isEmpty());
+        assertThat(result.getRequirements()).containsExactly(requirementDto);
+        assertThat(result.getMeasurements()).containsExactly(measurementDto);
     }
 
     @DisplayName("Get report - not found")
@@ -124,7 +130,7 @@ class ReportServiceTest {
     void getReportNotFound() {
         // Arrange
         UUID uuid = UUID.randomUUID();
-        when(reportRepository.findById(uuid)).thenThrow(new ReportNotFoundException());
+        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
 
         // Act
 
@@ -176,7 +182,7 @@ class ReportServiceTest {
         UUID uuid = UUID.randomUUID();
         Report report = Report.builder().id(uuid).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
 
-        when(reportRepository.findById(uuid)).thenThrow(new ReportNotFoundException());
+        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
 
         // Act
 
@@ -209,9 +215,6 @@ class ReportServiceTest {
                 List.of());
 
         when(reportRepository.findById(uuid)).thenReturn(Optional.of(report));
-        doAnswer(inv -> {
-            return report;
-        }).when(reportMapper).update(request, report);
         when(reportMapper.toDto(report)).thenReturn(reportDto);
 
         // Act
@@ -219,6 +222,7 @@ class ReportServiceTest {
 
         // Assert
         assertEquals(request.getUserId(), result.getUserId());
+        verify(reportMapper).update(request, report);
         verify(reportRepository).save(report);
     }
 
@@ -235,7 +239,7 @@ class ReportServiceTest {
                 List.of(),
                 List.of());
 
-        when(reportRepository.findById(uuid)).thenThrow(new ReportNotFoundException());
+        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
 
         // Act
 

@@ -1,12 +1,13 @@
 package org.dodds.nfrapi.report;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MeasurementDto {
     private UUID id;
     private UUID requirementId;
