@@ -133,7 +133,6 @@ public class CategoryServiceTest {
 
         // Act
 
-
         // Assert
         assertThrows(DuplicateCategoryException.class, () -> categoryService.createCategory(request));
         verify(categoryRepository, never()).saveAndFlush(any());
@@ -177,14 +176,42 @@ public class CategoryServiceTest {
                 .sortOrder(1)
                 .build();
         UUID id = UUID.randomUUID();
-        when(categoryRepository.findById(id)).thenThrow(new CategoryNotFoundException());
+        when(categoryRepository.findById(id)).thenReturn(Optional.empty());
 
         // Act
 
         // Assert
         assertThrows(CategoryNotFoundException.class, () -> categoryService.updateCategory(id, request));
         verify(categoryRepository, never()).saveAndFlush(any());
+    }
 
+    @DisplayName("should delete a category")
+    @Test
+    void shouldDeleteACategory() {
+        // Arrange
+        var id = UUID.randomUUID();
+        var category = Category.builder().id(id).build();
+        when(categoryRepository.findById(id)).thenReturn(Optional.of(category));
+
+        // Act
+        categoryService.deleteCategory(id);
+
+        // Assert
+        verify(categoryRepository).delete(category);
+    }
+
+    @DisplayName("should delete a category")
+    @Test
+    void shouldNotDeleteACategoryDueToCategoryNotFound() {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        when(categoryRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act
+
+        // Assert
+        assertThrows(CategoryNotFoundException.class, () -> categoryService.deleteCategory(id));
+        verify(categoryRepository, never()).saveAndFlush(any());
     }
 
 }
