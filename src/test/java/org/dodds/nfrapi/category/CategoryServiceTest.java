@@ -1,6 +1,5 @@
 package org.dodds.nfrapi.category;
 
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@Slf4j
 @ExtendWith(MockitoExtension.class)
 public class CategoryServiceTest {
 
@@ -139,6 +137,54 @@ public class CategoryServiceTest {
         // Assert
         assertThrows(DuplicateCategoryException.class, () -> categoryService.createCategory(request));
         verify(categoryRepository, never()).saveAndFlush(any());
+    }
+
+    @DisplayName("Should update a category")
+    @Test
+    void shouldUpdateACategory() {
+        // Arrange
+        var request = UpdateCategoryRequest.builder()
+                .name("category name")
+                .shortName("short name")
+                .description("category description")
+                .sortOrder(1)
+                .build();
+
+        var id = UUID.randomUUID();
+        var category = Category.builder().id(id).build();
+        var categoryDto = CategoryDto.builder().id(id).build();
+
+        when(categoryRepository.findById(id)).thenReturn(Optional.of(category));
+        when(mapper.toDto(category)).thenReturn(categoryDto);
+
+        // Act
+        var result = categoryService.updateCategory(id, request);
+
+        // Assert
+        assertThat(result).isEqualTo(categoryDto);
+        verify(mapper).update(request, category);
+        verify(categoryRepository).saveAndFlush(category);
+    }
+
+    @DisplayName("Should not update a category due to category not found")
+    @Test
+    void shouldNotUpdateACategoryDueToCategoryNotFound() {
+        // Arrange
+        var request = UpdateCategoryRequest.builder()
+                .name("category name")
+                .shortName("short name")
+                .description("category description")
+                .sortOrder(1)
+                .build();
+        UUID id = UUID.randomUUID();
+        when(categoryRepository.findById(id)).thenThrow(new CategoryNotFoundException());
+
+        // Act
+
+        // Assert
+        assertThrows(CategoryNotFoundException.class, () -> categoryService.updateCategory(id, request));
+        verify(categoryRepository, never()).saveAndFlush(any());
+
     }
 
 }
