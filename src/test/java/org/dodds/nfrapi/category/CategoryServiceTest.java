@@ -265,13 +265,15 @@ public class CategoryServiceTest {
 
         var result = categoryService.getSubCategory(subCategoryID, categoryID);
 
-        assert(result.getId()).equals(subCategoryID);
+        assertThat(result.getId()).isEqualTo(subCategoryID);
     }
 
     @Test
     void shouldNotReturnASubCategoryDueToSubCategoryNotFound() {
         var categoryID = UUID.randomUUID();
         var subCategoryID = UUID.randomUUID();
+
+        when(subCategoryRepository.findByIdAndCategoryId(subCategoryID, categoryID)).thenReturn(null);
 
         assertThrows(SubCategoryNotFoundException.class,() -> categoryService.getSubCategory(subCategoryID, categoryID));
     }
@@ -322,7 +324,7 @@ public class CategoryServiceTest {
     }
 
     @Test
-    void shouldNotCreateASubCategoryDueToDuplicateName() {
+    void shouldNotCreateASubCategoryDueToCategoryNotFound() {
 
         var request = CreateSubCategoryRequest.builder()
                 .name("name")
@@ -332,6 +334,25 @@ public class CategoryServiceTest {
                 .build();
 
         assertThrows(CategoryNotFoundException.class, () -> categoryService.createSubCategory(UUID.randomUUID(), request));
+    }
+
+    @Test
+    void shouldNotCreateASubCategoryDueToDuplicateName() {
+
+        var categoryId = UUID.randomUUID();
+        var category = Category.builder().id(categoryId).build();
+
+        var request = CreateSubCategoryRequest.builder()
+                .name("name")
+                .shortName("short name")
+                .description("description")
+                .sortOrder(1)
+                .build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(subCategoryRepository.existsByName(request.name())).thenReturn(true);
+
+        assertThrows(DuplicateSubCategoryException.class, () -> categoryService.createSubCategory(categoryId, request));
     }
 
     @Test
@@ -376,7 +397,7 @@ public class CategoryServiceTest {
 
         assertThat(result).isEqualTo(subCategoryDto);
         assertThat(result.getActive()).isTrue();
-        verify(subCategoryRepository).saveAndFlush(subCategory);
+        verify(mapper).update(request, subCategory);
 
     }
 
@@ -445,7 +466,7 @@ public class CategoryServiceTest {
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         assertThrows(CategoryNotFoundException.class, () -> categoryService.deleteSubCategory(subCategoryId, categoryId));
-        verify(categoryRepository, never()).delete(any());
+        verify(subCategoryRepository, never()).delete(any());
     }
 
     @Test
@@ -459,7 +480,7 @@ public class CategoryServiceTest {
         when(subCategoryRepository.findByIdAndCategoryId(subCategoryId,categoryId)).thenReturn(null);
 
         assertThrows(SubCategoryNotFoundException.class, () -> categoryService.deleteSubCategory(subCategoryId, categoryId));
-        verify(categoryRepository, never()).delete(any());
+        verify(subCategoryRepository, never()).delete(any());
 
     }
 }

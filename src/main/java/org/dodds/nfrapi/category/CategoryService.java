@@ -81,8 +81,13 @@ public class CategoryService {
 
     public SubCategoryDto createSubCategory(UUID id, CreateSubCategoryRequest request) {
         var category = categoryRepository.findById(id).orElseThrow(CategoryNotFoundException::new);
+
+        if(subCategoryRepository.existsByName(request.name())) {
+            throw new DuplicateSubCategoryException();
+        }
+
         var subCategory = categoryMapper.toEntityFromCreateSubCategoryRequest(request);
-        //subCategory.setCategoryId(id);
+        subCategory.setCategory(category);
         subCategory.setActive(true);
         subCategoryRepository.saveAndFlush(subCategory);
         return categoryMapper.toDto(subCategory);
