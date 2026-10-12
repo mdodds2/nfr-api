@@ -66,7 +66,7 @@ public class CategoryService {
     }
 
     public List<SubCategoryDto> getSubCategories(UUID id, String sortBy) {
-        var sort = !Set.of("name", "sortOrder").contains(sortBy) ? "sortOrder" : sortBy;
+        var sort = "name".equals(sortBy) ? sortBy : "sortOrder";
         var subCategories = subCategoryRepository.findAllByCategoryId(id, Sort.by(sort));
         var list = new ArrayList<SubCategoryDto>();
         subCategories.forEach(subCategory -> list.add(categoryMapper.toDto(subCategory)));

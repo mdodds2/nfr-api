@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
@@ -200,7 +201,7 @@ public class CategoryServiceTest {
         verify(categoryRepository).delete(category);
     }
 
-    @DisplayName("should delete a category")
+    @DisplayName("should not delete a category due to category not found")
     @Test
     void shouldNotDeleteACategoryDueToCategoryNotFound() {
         // Arrange
@@ -211,7 +212,43 @@ public class CategoryServiceTest {
 
         // Assert
         assertThrows(CategoryNotFoundException.class, () -> categoryService.deleteCategory(id));
-        verify(categoryRepository, never()).saveAndFlush(any());
+        verify(categoryRepository, never()).delete(any());
     }
 
+    @DisplayName("Get SubCategories with no sort order")
+    @Test
+    void shouldReturnAllSubcategoriesWithoutSpecifyingSortOrder() {
+        // Arrange
+        var id = UUID.randomUUID();
+        var subCategory = SubCategory.builder().id(UUID.randomUUID()).build();
+        var subCategoryDto = SubCategoryDto.builder().id(subCategory.getId()).build();
+
+        when(subCategoryRepository.findAllByCategoryId(id, Sort.by("sortOrder"))).thenReturn(List.of(subCategory));
+        when(mapper.toDto(subCategory)).thenReturn(subCategoryDto);
+
+        // Act
+        var result = categoryService.getSubCategories(id, null);
+
+        // Assert
+        assertThat(result).containsExactly(subCategoryDto);
+    }
+
+    @DisplayName("Get SubCategories sorted by name")
+    @Test
+    void shouldReturnAllSubcategoriesWithSpecifyingSortOrder() {
+
+        // Arrange
+        var id = UUID.randomUUID();
+        var subCategory = SubCategory.builder().id(UUID.randomUUID()).name("subCategory name").build();
+        var subCategoryDto = SubCategoryDto.builder().id(subCategory.getId()).build();
+
+        when(subCategoryRepository.findAllByCategoryId(id, Sort.by("name"))).thenReturn(List.of(subCategory));
+        when(mapper.toDto(subCategory)).thenReturn(subCategoryDto);
+
+        // Act
+        var result = categoryService.getSubCategories(id, "name");
+
+        // Assert
+        assertThat(result).containsExactly(subCategoryDto);
+    }
 }
