@@ -1,5 +1,6 @@
 package org.dodds.nfrapi.category;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 public class CategoryServiceTest {
 
@@ -26,7 +28,7 @@ public class CategoryServiceTest {
 
     @Mock
     SubCategoryRepository subCategoryRepository;
-    
+
     @InjectMocks
     CategoryService categoryService;
 
@@ -78,7 +80,7 @@ public class CategoryServiceTest {
 
     @DisplayName("Return a Category - category not found")
     @Test
-    void shouldThrowAnExceptionWhenIdDoesNotExist() {
+    void shouldThrowCategoryNotFoundWhenIdDoesNotExist() {
         //Arrange
         UUID id = UUID.randomUUID();
         when(categoryRepository.findById(id)).thenReturn(Optional.empty());
@@ -87,6 +89,56 @@ public class CategoryServiceTest {
 
         // Assert
         assertThrows(CategoryNotFoundException.class, () -> categoryService.getCategory(id));
+    }
+
+    @DisplayName("Create a category")
+    @Test
+    void shouldCreateACategory() {
+        // Arrange
+        var request = CreateCategoryRequest.builder()
+                .name("category name")
+                .shortName("short name")
+                .description("category description")
+                .sortOrder(1)
+                .image("")
+                .build();
+
+        var category = Category.builder().id(UUID.randomUUID()).build();
+        var categoryDto = CategoryDto.builder().id(category.getId()).build();
+
+        when(categoryRepository.existsByName(request.name())).thenReturn(false);
+        when(mapper.toEntityFromCreateCategoryRequest(request)).thenReturn(category);
+        when(mapper.toDto(category)).thenReturn(categoryDto);
+        // Act
+        var result = categoryService.createCategory(request);
+
+        // Assert
+        assertThat(result).isEqualTo(categoryDto);
+        assertThat(category.getActive()).isTrue();
+        verify(categoryRepository).saveAndFlush(category);
+
+    }
+
+    @DisplayName("Create a category with a duplicate name")
+    @Test
+    void shouldNotCreateACategoryBecauseOfADuplicateName() {
+        // Arrange
+        var request = CreateCategoryRequest.builder()
+                .name("category name")
+                .shortName("short name")
+                .description("category description")
+                .sortOrder(1)
+                .image("")
+                .build();
+
+        when(categoryRepository.existsByName(request.name())).thenReturn(true);
+
+        // Act
+
+
+        // Assert
+        assertThrows(DuplicateCategoryException.class, () -> categoryService.createCategory(request));
+        verify(categoryRepository, never()).saveAndFlush(any());
     }
 
 }

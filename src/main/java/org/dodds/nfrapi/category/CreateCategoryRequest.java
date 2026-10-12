@@ -1,12 +1,12 @@
 package org.dodds.nfrapi.category;
 
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class CreateCategoryRequest {
-    private String name;
-    private String shortName;
-    private String description;
-    private Integer sortOrder;
-    private String image;
-}
+@Builder
+public record CreateCategoryRequest (
+    String name,
+    String shortName,
+    String description,
+    Integer sortOrder,
+    String image
+) {}

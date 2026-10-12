@@ -44,7 +44,7 @@ public class CategoryService {
     }
 
     public CategoryDto createCategory(CreateCategoryRequest request) {
-        if(categoryRepository.existsByName(request.getName())) {
+        if(categoryRepository.existsByName(request.name())) {
             throw new DuplicateCategoryException();
         }
         Category category = categoryMapper.toEntityFromCreateCategoryRequest(request);
