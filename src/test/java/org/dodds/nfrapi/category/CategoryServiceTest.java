@@ -350,9 +350,10 @@ public class CategoryServiceTest {
                 .build();
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
-        when(subCategoryRepository.existsByName(request.name())).thenReturn(true);
+        when(subCategoryRepository.existsByNameAndCategoryId(request.name(), categoryId)).thenReturn(true);
 
         assertThrows(DuplicateSubCategoryException.class, () -> categoryService.createSubCategory(categoryId, request));
+        verify(subCategoryRepository, never()).saveAndFlush(any());
     }
 
     @Test

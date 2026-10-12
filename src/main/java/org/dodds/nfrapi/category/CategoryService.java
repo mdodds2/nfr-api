@@ -82,7 +82,7 @@ public class CategoryService {
     public SubCategoryDto createSubCategory(UUID id, CreateSubCategoryRequest request) {
         var category = categoryRepository.findById(id).orElseThrow(CategoryNotFoundException::new);
 
-        if(subCategoryRepository.existsByName(request.name())) {
+        if(subCategoryRepository.existsByNameAndCategoryId(request.name(), id)) {
             throw new DuplicateSubCategoryException();
         }
 

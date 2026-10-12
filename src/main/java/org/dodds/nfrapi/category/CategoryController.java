@@ -78,7 +78,12 @@ public class CategoryController {
 
 
     @ExceptionHandler(CategoryException.class)
-    public ResponseEntity<ErrorDto> handleGroupNotFound(CategoryNotFoundException ex) {
+    public ResponseEntity<ErrorDto> handleCategoryNotFound(CategoryNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(CategoryException.class)
+    public ResponseEntity<ErrorDto> handleDuplicateSubCategoryName(DuplicateSubCategoryException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
     }
 
