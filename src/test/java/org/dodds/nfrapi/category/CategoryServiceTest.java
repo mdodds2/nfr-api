@@ -24,6 +24,9 @@ public class CategoryServiceTest {
     @Mock
     CategoryMapper mapper;
 
+    @Mock
+    SubCategoryRepository subCategoryRepository;
+    
     @InjectMocks
     CategoryService categoryService;
 
@@ -53,7 +56,7 @@ public class CategoryServiceTest {
 
     @DisplayName("Return a Category - category found")
     @Test
-    void shouldReturnACategoryFound() {
+    void shouldReturnCategoryWhenIdExists() {
         //Arrange
         SubCategory subCategory = SubCategory.builder().id(UUID.randomUUID()).build();
         Category category = Category.builder().id(UUID.randomUUID()).build();
@@ -66,25 +69,24 @@ public class CategoryServiceTest {
         when(mapper.toDto(subCategory)).thenReturn(subCategoryDto);
 
         // Act
+        CategoryDto result = categoryService.getCategory(category.getId());
 
         // Assert
-        assertNotNull(categoryService.getCategory(category.getId()));
+        assertThat(result).isEqualTo(categoryDto);
+        assertThat(result.getSubCategories()).containsExactly(subCategoryDto);
     }
 
     @DisplayName("Return a Category - category not found")
     @Test
-    void shouldNotReturnACategoryNotFound() {
+    void shouldThrowAnExceptionWhenIdDoesNotExist() {
         //Arrange
-        SubCategory subCategory = SubCategory.builder().id(UUID.randomUUID()).build();
-        Category category = Category.builder().id(UUID.randomUUID()).build();
-        category.setSubCategories(List.of(subCategory));
-
-        when(categoryRepository.findById(category.getId())).thenThrow(CategoryNotFoundException.class);
+        UUID id = UUID.randomUUID();
+        when(categoryRepository.findById(id)).thenReturn(Optional.empty());
 
         // Act
 
         // Assert
-        assertThrows(CategoryNotFoundException.class, () -> categoryService.getCategory(category.getId()));
+        assertThrows(CategoryNotFoundException.class, () -> categoryService.getCategory(id));
     }
 
 }
