@@ -1,13 +1,11 @@
 package org.dodds.nfrapi.category;
 
-import lombok.Data;
+import lombok.Builder;
 
-import java.util.UUID;
-
-@Data
-public class CreateSubCategoryRequest {
-    private String name;
-    private String shortName;
-    private String description;
-    private Integer sortOrder;
-}
+@Builder
+public record CreateSubCategoryRequest(
+    String name,
+    String shortName,
+    String description,
+    Integer sortOrder
+) {}

@@ -251,4 +251,215 @@ public class CategoryServiceTest {
         // Assert
         assertThat(result).containsExactly(subCategoryDto);
     }
+
+    @Test
+    void shouldReturnASubCategory() {
+        var categoryID = UUID.randomUUID();
+        var subCategoryID = UUID.randomUUID();
+
+        var subCategory = SubCategory.builder().id(subCategoryID).build();
+        var subCategoryDto = SubCategoryDto.builder().id(subCategory.getId()).build();
+
+        when(subCategoryRepository.findByIdAndCategoryId(subCategoryID, categoryID)).thenReturn(subCategory);
+        when(mapper.toDto(subCategory)).thenReturn(subCategoryDto);
+
+        var result = categoryService.getSubCategory(subCategoryID, categoryID);
+
+        assert(result.getId()).equals(subCategoryID);
+    }
+
+    @Test
+    void shouldNotReturnASubCategoryDueToSubCategoryNotFound() {
+        var categoryID = UUID.randomUUID();
+        var subCategoryID = UUID.randomUUID();
+
+        assertThrows(SubCategoryNotFoundException.class,() -> categoryService.getSubCategory(subCategoryID, categoryID));
+    }
+
+    @Test
+    void shouldCreateASubCategory() {
+
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+
+        var category = Category.builder().id(categoryId).build();
+
+        var request = CreateSubCategoryRequest.builder()
+                .name("name")
+                .shortName("short name")
+                .description("description")
+                .sortOrder(1)
+                .build();
+
+        var subCategory = SubCategory.builder()
+                .id(subCategoryId)
+                .category(category)
+                .name(request.name())
+                .shortName(request.shortName())
+                .description(request.description())
+                .sortOrder(request.sortOrder())
+                .build();
+
+        var subCategoryDto = SubCategoryDto.builder()
+                .id(subCategoryId)
+                .name(request.name())
+                .shortName(request.shortName())
+                .description(request.description())
+                .sortOrder(request.sortOrder())
+                .active(true)
+                .build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(mapper.toEntityFromCreateSubCategoryRequest(request)).thenReturn(subCategory);
+        when(mapper.toDto(subCategory)).thenReturn(subCategoryDto);
+
+        var result = categoryService.createSubCategory(categoryId, request);
+
+        assertThat(result).isEqualTo(subCategoryDto);
+        assertThat(subCategory.getActive()).isTrue();
+        assertThat(subCategory.getCategory()).isEqualTo(category);
+        verify(subCategoryRepository).saveAndFlush(subCategory);
+    }
+
+    @Test
+    void shouldNotCreateASubCategoryDueToDuplicateName() {
+
+        var request = CreateSubCategoryRequest.builder()
+                .name("name")
+                .shortName("short name")
+                .description("description")
+                .sortOrder(1)
+                .build();
+
+        assertThrows(CategoryNotFoundException.class, () -> categoryService.createSubCategory(UUID.randomUUID(), request));
+    }
+
+    @Test
+    void shouldUpdateASubCategory() {
+
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+
+        var category = Category.builder().id(categoryId).build();
+
+        var request = UpdateSubCategoryRequest.builder()
+                .name("name")
+                .shortName("short name")
+                .description("description")
+                .sortOrder(1)
+                .build();
+
+        var subCategory = SubCategory.builder()
+                .id(subCategoryId)
+                .category(category)
+                .name(request.name())
+                .shortName(request.shortName())
+                .description(request.description())
+                .sortOrder(request.sortOrder())
+                .build();
+
+        var subCategoryDto = SubCategoryDto.builder()
+                .id(subCategoryId)
+                .categoryId(categoryId)
+                .name(request.name())
+                .shortName(request.shortName())
+                .description(request.description())
+                .sortOrder(request.sortOrder())
+                .active(true)
+                .build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(subCategoryRepository.findByIdAndCategoryId(subCategoryId, categoryId)).thenReturn(subCategory);
+        when(mapper.toDto(subCategory)).thenReturn(subCategoryDto);
+
+        var result = categoryService.updateSubCategory(subCategoryId, categoryId, request);
+
+        assertThat(result).isEqualTo(subCategoryDto);
+        assertThat(result.getActive()).isTrue();
+        verify(subCategoryRepository).saveAndFlush(subCategory);
+
+    }
+
+    @Test
+    void shouldNotUpdateASubCategoryDueToCategoryNotFound() {
+
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+
+        var request = UpdateSubCategoryRequest.builder()
+                .name("name")
+                .shortName("short name")
+                .description("description")
+                .sortOrder(1)
+                .build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+        assertThrows(CategoryNotFoundException.class, () -> categoryService.updateSubCategory(subCategoryId, categoryId, request));
+    }
+
+    @Test
+    void shouldNotUpdateASubCategoryDueToSubCategoryNotFound() {
+
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+
+        var request = UpdateSubCategoryRequest.builder()
+                .name("name")
+                .shortName("short name")
+                .description("description")
+                .sortOrder(1)
+                .build();
+
+        var category = Category.builder().id(categoryId).build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(subCategoryRepository.findByIdAndCategoryId(subCategoryId, categoryId)).thenReturn(null);
+
+        assertThrows(SubCategoryNotFoundException.class, () -> categoryService.updateSubCategory(subCategoryId, categoryId, request));
+    }
+
+    @Test
+    void shouldDeleteASubCategory() {
+
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+
+        var category = Category.builder().id(categoryId).build();
+        var subCategory = SubCategory.builder().id(subCategoryId).build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(subCategoryRepository.findByIdAndCategoryId(subCategoryId, categoryId)).thenReturn(subCategory);
+
+        // Act
+        categoryService.deleteSubCategory(subCategoryId, categoryId);
+
+        // Assert
+        verify(subCategoryRepository).delete(subCategory);
+    }
+
+    @Test
+    void shouldNotDeleteASubCategoryDueToCategoryNotFound() {
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+
+        assertThrows(CategoryNotFoundException.class, () -> categoryService.deleteSubCategory(subCategoryId, categoryId));
+        verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldNotDeleteASubCategoryDueToSubCategoryNotFound() {
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+        var category = Category.builder().id(categoryId).build();
+        var subCategory = SubCategory.builder().id(categoryId).build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(subCategoryRepository.findByIdAndCategoryId(subCategoryId,categoryId)).thenReturn(null);
+
+        assertThrows(SubCategoryNotFoundException.class, () -> categoryService.deleteSubCategory(subCategoryId, categoryId));
+        verify(categoryRepository, never()).delete(any());
+
+    }
 }
