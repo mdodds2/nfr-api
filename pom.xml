@@ -154,6 +154,16 @@
                         <goals><goal>report</goal></goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>**/NfrApiApplication.class</exclude>
+                        <exclude>**/*MapperImpl.class</exclude>
+                        <exclude>**/*Dto.class</exclude>
+                        <exclude>**/*Request.class</exclude>
+                        <exclude>**/common/*.class</exclude>
+                        <exclude>**/*Exception.class</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
 
 		</plugins>

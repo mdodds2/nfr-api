@@ -1,9 +1,6 @@
 package org.dodds.nfrapi.report;
 
-import org.dodds.nfrapi.category.Category;
-import org.dodds.nfrapi.category.SubCategory;
 import org.dodds.nfrapi.requirement.*;
-import org.hibernate.sql.Update;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
