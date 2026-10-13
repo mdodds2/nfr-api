@@ -12,11 +12,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.endsWith;
 
 @WebMvcTest(CategoryController.class)
 @AutoConfigureMockMvc(addFilters = false)   // skip JWT/security filters for now
@@ -59,4 +59,36 @@ class CategoryControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
     }
+
+    @Test
+    void shouldCreateCategoryAndReturnLocation() throws Exception {
+        var id = UUID.randomUUID();
+        var request = CreateCategoryRequest.builder().name("Performance").build();
+        var dto = CategoryDto.builder().id(id).name("Performance").build();
+        when(categoryService.createCategory(any())).thenReturn(dto);
+        mockMvc.perform(post("/categories")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", endsWith("/categories/" + id)))
+                .andExpect(jsonPath("$.id").value(id.toString()));
+    }
+
+    @Test
+    void shouldCreateSubCategoryAndReturnLocation() throws Exception {
+        var categoryId = UUID.randomUUID();
+        var subCategoryId = UUID.randomUUID();
+        var request = CreateSubCategoryRequest.builder().name("Performance Sub Category").build();
+        var dto = SubCategoryDto.builder().id(subCategoryId).categoryId(categoryId).name("Performance Sub Category").build();
+
+        when(categoryService.createSubCategory(eq(categoryId), any())).thenReturn(dto);
+
+        mockMvc.perform(post("/categories/{categoryId}/subcategories", categoryId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", endsWith("/categories/" + categoryId + "/subcategories/" + subCategoryId)))
+                .andExpect(jsonPath("$.id").value(subCategoryId.toString()));
+    }
+
 }

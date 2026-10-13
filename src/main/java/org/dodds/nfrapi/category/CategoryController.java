@@ -49,7 +49,7 @@ public class CategoryController {
     @PostMapping("/{id}/subcategories")
     public ResponseEntity<SubCategoryDto> createSubCategory(@PathVariable UUID id, @RequestBody CreateSubCategoryRequest request, UriComponentsBuilder uriBuilder) {
         var subCategoryDto = categoryService.createSubCategory(id, request);
-        var uri = uriBuilder.path("categories/{id}/subcategories/{subcategoryId}").buildAndExpand(subCategoryDto.getCategoryId(), subCategoryDto.getCategoryId()).toUri();
+        var uri = uriBuilder.path("categories/{id}/subcategories/{subcategoryId}").buildAndExpand(id, subCategoryDto.getCategoryId()).toUri();
         return ResponseEntity.created(uri).body(subCategoryDto);
     }
 
