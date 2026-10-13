@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+
 @AllArgsConstructor
 @Service
 public class ReportService {
@@ -18,7 +19,7 @@ public class ReportService {
     private final RequirementRepository requirementRepository;
     private final RequirementMapper requirementMapper;
 
-    public Iterable<ReportDto> getAllReports(String sortBy) {
+    public List<ReportDto> getAllReports(String sortBy) {
 
         if (!Set.of("name", "created_at").contains(sortBy))
             sortBy = "name";
@@ -46,13 +47,6 @@ public class ReportService {
         });
 
         return reportDtos;
-
-/*
-        return reportRepository.findAll(Sort.by(sortBy))
-                .stream()
-                .map(reportMapper::toDto)
-                .toList();
-*/
     }
 
     public ReportDto getReport(UUID id) {
@@ -75,9 +69,9 @@ public class ReportService {
         return reportDto;
     }
 
-    public Iterable<ReportDto> getReportsForUser(UUID id, String sortBy) {
+    public List<ReportDto> getReportsForUser(UUID id, String sortBy) {
 
-        if (!Set.of("name", "createdAt").contains(sortBy))
+        if (!Set.of("name", "created_at").contains(sortBy))
             sortBy = "name";
 
         return reportRepository.findAllByUserId(id, Sort.by(sortBy))

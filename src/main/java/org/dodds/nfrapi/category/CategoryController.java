@@ -2,6 +2,7 @@ package org.dodds.nfrapi.category;
 
 import lombok.AllArgsConstructor;
 import org.dodds.nfrapi.common.ErrorDto;
+import org.dodds.nfrapi.common.ExcludedGeneratedFromJacoco;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ public class CategoryController {
     public List<SubCategoryDto> getSubCategories(
             @PathVariable UUID id,
             @RequestParam(required = false, defaultValue = "sortOrder", name = "sort") String sortBy)  {
+        System.out.println("MIKE LOOK HERE CONTROLLER:  >>" + sortBy);
         return categoryService.getSubCategories(id, sortBy);
     }
 
@@ -49,7 +51,7 @@ public class CategoryController {
     @PostMapping("/{id}/subcategories")
     public ResponseEntity<SubCategoryDto> createSubCategory(@PathVariable UUID id, @RequestBody CreateSubCategoryRequest request, UriComponentsBuilder uriBuilder) {
         var subCategoryDto = categoryService.createSubCategory(id, request);
-        var uri = uriBuilder.path("categories/{id}/subcategories/{subcategoryId}").buildAndExpand(id, subCategoryDto.getCategoryId()).toUri();
+        var uri = uriBuilder.path("categories/{id}/subcategories/{subcategoryId}").buildAndExpand(id, subCategoryDto.getId()).toUri();
         return ResponseEntity.created(uri).body(subCategoryDto);
     }
 
@@ -76,22 +78,25 @@ public class CategoryController {
     }
 
 
-
+    @ExcludedGeneratedFromJacoco
     @ExceptionHandler(CategoryNotFoundException.class)
     public ResponseEntity<ErrorDto> handleCategoryNotFound(CategoryNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
     }
 
+    @ExcludedGeneratedFromJacoco
     @ExceptionHandler(DuplicateCategoryException.class)
     public ResponseEntity<ErrorDto> handleDuplicateCategoryException(DuplicateCategoryException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
     }
 
+    @ExcludedGeneratedFromJacoco
     @ExceptionHandler(SubCategoryNotFoundException.class)
     public ResponseEntity<ErrorDto> handleSubCategoryNotFoundException(SubCategoryNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
     }
 
+    @ExcludedGeneratedFromJacoco
     @ExceptionHandler(DuplicateSubCategoryException.class)
     public ResponseEntity<ErrorDto> handleDuplicateSubCategoryName(DuplicateSubCategoryException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));

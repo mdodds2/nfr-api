@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 
 import java.util.*;
 
@@ -135,6 +136,82 @@ class ReportServiceTest {
         assertThrows(ReportNotFoundException.class, () -> reportService.getReport(uuid));
     }
 
+    @DisplayName("Get report - for user")
+    @Test
+    void getReportForUser() {
+        // Arrange
+        UUID userid = UUID.randomUUID();
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+
+        when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+
+        // Act
+        var result = reportService.getReportsForUser(userid, "name");
+
+        // Assert
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    @DisplayName("Get report - for user sorted by created_at")
+    @Test
+    void getReportForUserSortedByDate() {
+        // Arrange
+        UUID userid = UUID.randomUUID();
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+
+        when(reportRepository.findAllByUserId(userid, Sort.by("created_at"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+
+        // Act
+        var result = reportService.getReportsForUser(userid, "created_at");
+
+        // Assert
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    @DisplayName("Get report - for user sorted by other")
+    @Test
+    void getReportForUserSortedByOther() {
+        // Arrange
+        UUID userid = UUID.randomUUID();
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+
+        when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+
+        // Act
+        var result = reportService.getReportsForUser(userid, "other");
+
+        // Assert
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+
     @DisplayName("Create report with an unknown requirement id")
     @Test
     void createReportWithAnUnknownRequirementId() {
@@ -243,6 +320,84 @@ class ReportServiceTest {
         // Assert
         assertThrows(ReportNotFoundException.class, () -> reportService.updateReport(uuid, request));
         verify(reportRepository, never()).save(report);
+    }
+
+    @Test
+    void shouldGetAllReportsSortedByName() throws Exception {
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+        var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
+        var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
+
+        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
+        when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
+
+        var result = reportService.getAllReports("name");
+
+        assertThat(result).containsExactly(reportDto);
+        assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
+        assertThat(reportDto.getMeasurements()).containsExactly(measurementDto);
+     }
+
+    @Test
+    void shouldGetAllReportsSortedByCreatedAt() throws Exception {
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+        var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
+        var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
+
+        when(reportRepository.findAll(Sort.by("created_at"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
+        when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
+
+        var result = reportService.getAllReports("created_at");
+
+        assertThat(result).containsExactly(reportDto);
+        assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
+        assertThat(reportDto.getMeasurements()).containsExactly(measurementDto);
+    }
+
+    @Test
+    void shouldGetAllReportsSortedByOther() throws Exception {
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+        var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
+        var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
+
+        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
+        when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
+
+        var result = reportService.getAllReports("other");
+
+        assertThat(result).containsExactly(reportDto);
+        assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
+        assertThat(reportDto.getMeasurements()).containsExactly(measurementDto);
     }
 
 }
