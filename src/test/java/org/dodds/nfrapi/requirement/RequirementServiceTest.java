@@ -1,18 +1,17 @@
 package org.dodds.nfrapi.requirement;
 
-import jakarta.persistence.Column;
 import org.dodds.nfrapi.category.SubCategory;
 import org.dodds.nfrapi.category.SubCategoryNotFoundException;
 import org.dodds.nfrapi.category.SubCategoryRepository;
 
-import org.hibernate.annotations.GeneratedColumn;
+import org.dodds.nfrapi.common.Priority;
+import org.dodds.nfrapi.common.Status;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +19,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,54 +51,47 @@ class RequirementServiceTest {
     @Test
     void shouldReturnARequirement() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        UUID subCategoryId = UUID.randomUUID();
 
-        SubCategory subCategory = new SubCategory(
-                uuid,
-                "test subCategory name",
-                "shortName",
-                "test subCategory description",
-                1,
-                true,
-                null,
-                null);
+        SubCategory subCategory = SubCategory.builder()
+                .id(UUID.randomUUID())
+                .name("test subCategory name")
+                .shortName("shortName")
+                .description("test subCategory description")
+                .sortOrder(1)
+                .active(true)
+                .build();
 
-        Requirement mockRequirement = new Requirement(
-            uuid,
-            "test requirement identifier",
-            "test requirement title",
-            "test requirement description",
-            "Low",
-            "Approved",
-            "rationale",
-            "source",
-            "riskIfViolated",
-            null,
-            null
-        );
+        Requirement mockRequirement = Requirement.builder()
+                .id(UUID.randomUUID())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
+
         mockRequirement.setSubCategory(subCategory);
 
-        RequirementDto mockDto = new RequirementDto(
-                uuid,
-                subCategoryId,
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "rationale",
-                "source",
-                "riskIfViolated",
-                null,
-                null,
-                null
-        );
+        RequirementDto mockDto = RequirementDto.builder().
+                id(mockRequirement.getId()).
+                subCategoryId(subCategory.getId()).
+                identifier("test requirement identifier").
+                title("test requirement title").
+                description("test requirement description").
+                priority(Priority.LOW).
+                status(Status.APPROVED).
+                rationale("rationale").
+                source("source").
+                riskIfViolated("riskIfViolated").
+                build();
 
         // Act
-        when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
+        when(requirementRepository.findById(mockRequirement.getId())).thenReturn(Optional.of(mockRequirement));
         when(requirementMapper.toDto(any())).thenReturn(mockDto);
-        RequirementDto result = requirementService.getRequirement(uuid);
+        RequirementDto result = requirementService.getRequirement(mockRequirement.getId());
 
         // Assert
         assertNotNull(result);
@@ -115,7 +106,7 @@ class RequirementServiceTest {
     }
 
     @Test
-    void shouldNotReturnARequirementAndThrowAndException() {
+    void shouldNotReturnARequirementAndThrowAnException() {
         // Arrange
         var uuid = UUID.randomUUID();
 
@@ -127,20 +118,15 @@ class RequirementServiceTest {
     @Test
     void shouldReturnAListOfRequirementsBySubCategoryId() {
         // Arrange
-        UUID categoryId = UUID.randomUUID();
         UUID subCategoryId = UUID.randomUUID();
 
-        SubCategory subCategory = new SubCategory(
-                categoryId,
-                "test subCategory name",
-                "shortName",
-                "test subCategory description",
-                1,
-                true,
-                null,
-                null,
-                null
-        );
+        SubCategory subCategory = SubCategory.builder()
+                .id(subCategoryId)
+                .name("test subCategory name")
+                .shortName("shortName")
+                .description("test subCategory description")
+                .sortOrder(1)
+                .active(true).build();
 
 
         // Act
@@ -152,83 +138,75 @@ class RequirementServiceTest {
     }
 
     @Test
-    void shouldNotReturnAListOfRequirementsByGroupIdAndThrowAnException() {
+    void shouldNotReturnAListOfRequirementsBySubCategoryIdAndThrowAnException() {
         // Arrange
         UUID uuid = UUID.randomUUID();
 
         // Act / Assert
-        when(subCategoryRepository.findById(uuid)).thenReturn(Optional.empty());
-        assertThrows(SubCategoryNotFoundException.class, () -> requirementService.getRequirementsBySubCategory(uuid, null));
+        //when(subCategoryRepository.findById(uuid)).thenReturn(Optional.empty());
+        when(subCategoryRepository.findById(uuid)).thenThrow(new SubCategoryNotFoundException());
+        assertThrows(SubCategoryNotFoundException.class, () -> requirementService.getRequirementsBySubCategory(uuid, "title"));
     }
 
     @Test
     void shouldCreateARequirement() {
+
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        UUID subCategoryId = UUID.randomUUID();
+        SubCategory subCategory = SubCategory.builder()
+                .id(UUID.randomUUID())
+                .name("test subCategory name")
+                .shortName("shortName")
+                .description("test subCategory description")
+                .sortOrder(1)
+                .active(true)
+                .build();
 
-        CreateRequirementRequest request = new CreateRequirementRequest(
-            subCategoryId,
-            "test requirement identifier",
-            "test requirement title",
-            "test requirement description",
-            "Low",
-            "Approved",
-            "value",
-            "threshold",
-            "unit",
-            "measurementMethod",
-            "rationale",
-            "source",
-            "riskIfViolated"
-        );
+        CreateRequirementRequest request = CreateRequirementRequest.builder()
+                .subCategoryId(subCategory.getId())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .targetValue("value")
+                .thresholdValue("threshold")
+                .unit("unit")
+                .measurementMethod("measurementMethod")
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
-        SubCategory subCategory = new SubCategory(
-                uuid,
-                "test subCategory name",
-                "shortName",
-                "test subCategory description",
-                1,
-                true,
-                null,
-                null
-        );
-
-        Requirement mockRequirement = new Requirement(
-                uuid,
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "rationale",
-                "source",
-                "riskIfViolated",
-                null,
-                null
-        );
+        Requirement mockRequirement = Requirement.builder()
+                .id(UUID.randomUUID())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
         mockRequirement.setSubCategory(subCategory);
 
-        RequirementDto mockDto = new RequirementDto(
-            uuid,
-            subCategoryId,
-            "test requirement identifier",
-            "test requirement title",
-            "test requirement description",
-            "Low",
-            "Approved",
-            "rationale",
-            "source",
-            "riskIfViolated",
-            null,
-            null,
-            null
-        );
+        RequirementDto mockDto = RequirementDto.builder()
+                .id(mockRequirement.getId())
+                .subCategoryId(subCategory.getId())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
         // Act
-        when(requirementRepository.existsByTitle(anyString())).thenReturn(false);
-        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
+        when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(false);
+        when(subCategoryRepository.findById(request.getSubCategoryId())).thenReturn(Optional.of(subCategory));
         when(requirementMapper.toEntityFromCreateRequirementRequest(request)).thenReturn(mockRequirement);
         when(requirementMapper.toDto(mockRequirement)).thenReturn(mockDto);
         RequirementDto result = requirementService.createRequirement(request);
@@ -251,154 +229,136 @@ class RequirementServiceTest {
         // Arrange
         UUID uuid = UUID.randomUUID();
 
-        CreateRequirementRequest request = new CreateRequirementRequest(
-                uuid,
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "value",
-                "threshold",
-                "unit",
-                "measurementMethod",
-                "rationale",
-                "source",
-                "riskIfViolated"
-        );
+        CreateRequirementRequest request = CreateRequirementRequest.builder()
+                .subCategoryId(UUID.randomUUID())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .targetValue("value")
+                .thresholdValue("threshold")
+                .unit("unit")
+                .measurementMethod("measurementMethod")
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
         // Act / Assert
-        when(requirementRepository.existsByTitle(any())).thenReturn(true);
+        when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(true);
         assertThrows(DuplicateRequirementException.class, () -> requirementService.createRequirement(request));
     }
 
     @Test
-    void shouldNotCreateARequirementAndThrowAnException2() {
+    void shouldNotCreateARequirementAndThrowAnSubCategoryNotFoundException() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        UUID subCategoryId = UUID.randomUUID();
+        SubCategory subCategory = SubCategory.builder()
+                .id(UUID.randomUUID())
+                .name("test subCategory name")
+                .shortName("shortName")
+                .description("test subCategory description")
+                .sortOrder(1)
+                .active(true)
+                .build();
 
-        CreateRequirementRequest request = new CreateRequirementRequest(
-            uuid,
-            "test requirement identifier",
-            "test requirement title",
-            "test requirement description",
-            "Low",
-            "Approved",
-            "value",
-            "threshold",
-            "unit",
-            "measurementMethod",
-            "rationale",
-            "source",
-            "riskIfViolated"
-        );
+        CreateRequirementRequest request = CreateRequirementRequest.builder()
+                .subCategoryId(subCategory.getId())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .targetValue("value")
+                .thresholdValue("threshold")
+                .unit("unit")
+                .measurementMethod("measurementMethod")
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
-        SubCategory subCategory = new SubCategory(
-            uuid,
-            "test subCategory name",
-            "shortName",
-            "test subCategory description",
-            1,
-            true,
-            null,
-            null
-        );
+        Requirement mockRequirement = Requirement.builder()
+                .id(UUID.randomUUID())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
-        Requirement mockRequirement = new Requirement(
-            uuid,
-            "test requirement identifier",
-            "test requirement title",
-            "test requirement description",
-            "Low",
-            "Approved",
-            "rationale",
-            "source",
-            "riskIfViolated",
-            null,
-            null
-        );
         mockRequirement.setSubCategory(subCategory);
 
         // Act / Assert
-        when(requirementRepository.existsByTitle(any())).thenReturn(false);
-        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.empty());
-        when(requirementMapper.toEntityFromCreateRequirementRequest(request)).thenReturn(mockRequirement);
+        when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(false);
+        when(subCategoryRepository.findById(mockRequirement.getSubCategory().getId())).thenThrow(new SubCategoryNotFoundException());
         assertThrows(SubCategoryNotFoundException.class, () -> requirementService.createRequirement(request));
     }
 
     @Test
     void shouldUpdateARequirement() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        UUID subCategoryId = UUID.randomUUID();
+        UpdateRequirementRequest request = UpdateRequirementRequest.builder()
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .targetValue("value")
+                .thresholdValue("threshold")
+                .unit("unit")
+                .measurementMethod("measurementMethod")
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
-        UpdateRequirementRequest request = new UpdateRequirementRequest(
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "value",
-                "threshold",
-                "unit",
-                "measurementMethod",
-                "rationale",
-                "source",
-                "riskIfViolated"
-        );
+        SubCategory subCategory = SubCategory.builder()
+                .id(UUID.randomUUID())
+                .name("test subCategory name")
+                .shortName("shortName")
+                .description("test subCategory description")
+                .sortOrder(1)
+                .active(true)
+                .build();
 
-        SubCategory subCategory = new SubCategory(
-                uuid,
-                "test subCategory name",
-                "shortName",
-                "test subCategory description",
-                1,
-                true,
-                null,
-                null
-        );
+        Requirement mockRequirement = Requirement.builder()
+                .id(UUID.randomUUID())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .subCategory(subCategory)
+                .build();
 
-        Requirement mockRequirement = new Requirement(
-                uuid,
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "rationale",
-                "source",
-                "riskIfViolated",
-                null,
-                null
-        );
-        mockRequirement.setSubCategory(subCategory);
-
-        RequirementDto mockDto = new RequirementDto(
-                uuid,
-                subCategoryId,
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "rationale",
-                "source",
-                "riskIfViolated",
-                null,
-                null,
-                null
-        );
+        RequirementDto mockDto = RequirementDto.builder()
+                .id(mockRequirement.getId())
+                .subCategoryId(UUID.randomUUID())
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
         // Act
-        when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
-        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
+        when(requirementRepository.findById(mockRequirement.getId())).thenReturn(Optional.of(mockRequirement));
+        //when(subCategoryRepository.findById(mockDto.getSubCategoryId())).thenReturn(Optional.of(subCategory));
         //when(requirementMapper.toEntityFromUpdateRequirementRequest(any())).thenReturn(mockRequirement);
         when(requirementMapper.toDto(any())).thenReturn(mockDto);
-        var result = requirementService.updateRequirement(uuid, request);
 
         // Assert
-        assertNotNull(result);
+        assertNotNull(requirementService.updateRequirement(mockRequirement.getId(), request));
     }
 
     @Test
@@ -406,20 +366,20 @@ class RequirementServiceTest {
         // Arrange
         UUID uuid = UUID.randomUUID();
         UUID subCategoryId = UUID.randomUUID();
-        UpdateRequirementRequest request = new UpdateRequirementRequest(
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "value",
-                "threshold",
-                "unit",
-                "measurementMethod",
-                "rationale",
-                "source",
-                "riskIfViolated"
-        );
+        UpdateRequirementRequest request = UpdateRequirementRequest.builder()
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .targetValue("value")
+                .thresholdValue("threshold")
+                .unit("unit")
+                .measurementMethod("measurementMethod")
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
         // Act / Assert
         when(requirementRepository.findById(uuid)).thenReturn(Optional.empty());
@@ -427,81 +387,28 @@ class RequirementServiceTest {
     }
 
     @Test
-    void shouldNotUpdateARequirementAndThrowAnException2() {
-        // Arrange
-        UUID uuid = UUID.randomUUID();
-        UUID subCategoryId = UUID.randomUUID();
-        UpdateRequirementRequest request = new UpdateRequirementRequest(
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "value",
-                "threshold",
-                "unit",
-                "measurementMethod",
-                "rationale",
-                "source",
-                "riskIfViolated"
-        );
-
-        SubCategory subCategory = new SubCategory(
-                uuid,
-                "test subCategory name",
-                "shortName",
-                "test subCategory description",
-                1,
-                true,
-                null,
-                null
-        );
-
-        Requirement mockRequirement = new Requirement(
-                uuid,
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "rationale",
-                "source",
-                "riskIfViolated",
-                null,
-                null
-        );
-        mockRequirement.setSubCategory(subCategory);
-
-        // Act / Assert
-        when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
-        assertThrows(SubCategoryNotFoundException.class, () -> requirementService.updateRequirement(uuid, request));
-    }
-
-    @Test
     void shouldDeleteRequirement() {
         // Arrange
         UUID uuid = UUID.randomUUID();
 
-        Requirement mockRequirement = new Requirement(
-                uuid,
-                "test requirement identifier",
-                "test requirement title",
-                "test requirement description",
-                "Low",
-                "Approved",
-                "rationale",
-                "source",
-                "riskIfViolated",
-                null,
-                null
-        );
+        Requirement mockRequirement = Requirement.builder()
+                .id(uuid)
+                .identifier("test requirement identifier")
+                .title("test requirement title")
+                .description("test requirement description")
+                .priority(Priority.LOW)
+                .status(Status.APPROVED)
+                .rationale("rationale")
+                .source("source")
+                .riskIfViolated("riskIfViolated")
+                .build();
 
         // Act
         when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
         requirementService.deleteRequirement(uuid);
 
         // Assert
-        }
+    }
 
     @Test
     void shouldNotDeleteRequirement() {

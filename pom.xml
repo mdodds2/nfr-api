@@ -139,6 +139,56 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <executions>
+                    <execution>
+                        <goals><goal>prepare-agent</goal></goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals><goal>report</goal></goals>
+                    </execution>
+
+                    <execution>
+                        <id>check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.65</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>**/NfrApiApplication.class</exclude>
+                        <exclude>**/*MapperImpl.class</exclude>
+                        <exclude>**/*Dto.class</exclude>
+                        <exclude>**/*Request.class</exclude>
+                        <exclude>**/common/*.class</exclude>
+                        <exclude>**/*Exception.class</exclude>
+                    </excludes>
+                </configuration>
+
+            </plugin>
+
 		</plugins>
 	</build>
 

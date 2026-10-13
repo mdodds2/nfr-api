@@ -7,8 +7,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class ReportDto {
     private UUID id;

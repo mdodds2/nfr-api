@@ -1,11 +1,10 @@
 package org.dodds.nfrapi.requirement;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.dodds.nfrapi.category.SubCategory;
+import org.dodds.nfrapi.common.Priority;
+import org.dodds.nfrapi.common.Status;
 import org.dodds.nfrapi.report.Report;
 import org.hibernate.annotations.GeneratedColumn;
 
@@ -17,8 +16,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "requirements")
 public class Requirement {
 
@@ -36,11 +36,13 @@ public class Requirement {
     @Column(name = "description")
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority")
-    private String priority;
+    private Priority priority;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private String status;
+    private Status status;
 
     @Column(name = "rationale")
     private String rationale;
@@ -59,28 +61,15 @@ public class Requirement {
     @Column(name = "updated_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime updatedMoment;
 
-    // we don't want to delete a group if we delete a requirement (ie cascading delete)
+    // we don't want to delete a subcategory if we delete a requirement (ie cascading delete)
     @ManyToOne(fetch=FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE,
                                                 CascadeType.DETACH, CascadeType.REFRESH})
     @JoinColumn(name = "category_sub_id")
     private SubCategory subCategory;
 
+    @Builder.Default
     @ManyToMany(mappedBy = "reportRequirements")
     private Set<Report> reports = new HashSet<>();
-
-    public Requirement(UUID id, String identifier, String title, String description, String priority, String status, String rationale, String source, String riskIfViolated, LocalDateTime createdMoment, LocalDateTime updatedMoment) {
-        this.id = id;
-        this.identifier = identifier;
-        this.title = title;
-        this.description = description;
-        this.priority = priority;
-        this.status = status;
-        this.rationale = rationale;
-        this.source = source;
-        this.riskIfViolated = riskIfViolated;
-        this.createdMoment = createdMoment;
-        this.updatedMoment = updatedMoment;
-    }
 
     @Override
     public String toString() {

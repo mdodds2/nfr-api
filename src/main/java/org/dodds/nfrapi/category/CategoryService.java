@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -44,7 +43,7 @@ public class CategoryService {
     }
 
     public CategoryDto createCategory(CreateCategoryRequest request) {
-        if(categoryRepository.existsByName(request.getName())) {
+        if(categoryRepository.existsByName(request.name())) {
             throw new DuplicateCategoryException();
         }
         Category category = categoryMapper.toEntityFromCreateCategoryRequest(request);
@@ -66,7 +65,8 @@ public class CategoryService {
     }
 
     public List<SubCategoryDto> getSubCategories(UUID id, String sortBy) {
-        var sort = !Set.of("name", "sortOrder").contains(sortBy) ? "sortOrder" : sortBy;
+        var sort = "name".equals(sortBy) ? sortBy : "sortOrder";
+        System.out.println("MIKE LOOK HERE: >>" + sort);
         var subCategories = subCategoryRepository.findAllByCategoryId(id, Sort.by(sort));
         var list = new ArrayList<SubCategoryDto>();
         subCategories.forEach(subCategory -> list.add(categoryMapper.toDto(subCategory)));
@@ -82,8 +82,13 @@ public class CategoryService {
 
     public SubCategoryDto createSubCategory(UUID id, CreateSubCategoryRequest request) {
         var category = categoryRepository.findById(id).orElseThrow(CategoryNotFoundException::new);
+
+        if(subCategoryRepository.existsByNameAndCategoryId(request.name(), id)) {
+            throw new DuplicateSubCategoryException();
+        }
+
         var subCategory = categoryMapper.toEntityFromCreateSubCategoryRequest(request);
-        //subCategory.setCategoryId(id);
+        subCategory.setCategory(category);
         subCategory.setActive(true);
         subCategoryRepository.saveAndFlush(subCategory);
         return categoryMapper.toDto(subCategory);

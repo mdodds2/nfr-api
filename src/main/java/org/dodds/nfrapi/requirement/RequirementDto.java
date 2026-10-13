@@ -1,14 +1,18 @@
 package org.dodds.nfrapi.requirement;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import org.dodds.nfrapi.report.ReportDto;
+import lombok.NoArgsConstructor;
+import org.dodds.nfrapi.common.Priority;
+import org.dodds.nfrapi.common.Status;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Data
 public class RequirementDto {
     private UUID id;
@@ -16,12 +20,11 @@ public class RequirementDto {
     private String identifier;
     private String title;
     private String description;
-    private String priority;
-    private String status;
+    private Priority priority;
+    private Status status;
     private String rationale;
     private String source;
     private String riskIfViolated;
     private LocalDateTime createdMoment;
     private LocalDateTime updatedMoment;
-    private List<ReportDto> reports;
 }

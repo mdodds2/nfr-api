@@ -22,6 +22,7 @@ public interface CategoryMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "modifiedAt", ignore = true)
     @Mapping(target = "subCategories", ignore = true)
+    @Mapping(target = "image", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void update(UpdateCategoryRequest request, @MappingTarget Category category);
 

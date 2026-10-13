@@ -1,12 +1,12 @@
 package org.dodds.nfrapi.category;
 
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class UpdateSubCategoryRequest {
-    private String name;
-    private String shortName;
-    private String description;
-    private Integer sortOrder;
-    private Boolean active;
-}
+@Builder
+public record UpdateSubCategoryRequest(
+    String name,
+    String shortName,
+    String description,
+    Integer sortOrder,
+    Boolean active
+) {}

@@ -1,10 +1,7 @@
 package org.dodds.nfrapi.category;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.GeneratedColumn;
 
 import java.time.LocalDateTime;
@@ -13,8 +10,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "category_sub")
 public class SubCategory {
     @Id
@@ -51,16 +49,5 @@ public class SubCategory {
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     private Category category;
-
-    public SubCategory(UUID id, String name, String shortName, String description, Integer sortOrder, Boolean active, LocalDateTime createdAt, LocalDateTime modifiedAt) {
-        this.id = id;
-        this.name = name;
-        this.shortName = shortName;
-        this.description = description;
-        this.sortOrder = sortOrder;
-        this.active = active;
-        this.createdAt = createdAt;
-        this.modifiedAt = modifiedAt;
-    }
 
 }

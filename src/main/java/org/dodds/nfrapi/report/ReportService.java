@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+
 @AllArgsConstructor
 @Service
 public class ReportService {
@@ -18,7 +19,7 @@ public class ReportService {
     private final RequirementRepository requirementRepository;
     private final RequirementMapper requirementMapper;
 
-    public Iterable<ReportDto> getAllReports(String sortBy) {
+    public List<ReportDto> getAllReports(String sortBy) {
 
         if (!Set.of("name", "created_at").contains(sortBy))
             sortBy = "name";
@@ -46,13 +47,6 @@ public class ReportService {
         });
 
         return reportDtos;
-
-/*
-        return reportRepository.findAll(Sort.by(sortBy))
-                .stream()
-                .map(reportMapper::toDto)
-                .toList();
-*/
     }
 
     public ReportDto getReport(UUID id) {
@@ -75,9 +69,9 @@ public class ReportService {
         return reportDto;
     }
 
-    public Iterable<ReportDto> getReportsForUser(UUID id, String sortBy) {
+    public List<ReportDto> getReportsForUser(UUID id, String sortBy) {
 
-        if (!Set.of("name", "createdAt").contains(sortBy))
+        if (!Set.of("name", "created_at").contains(sortBy))
             sortBy = "name";
 
         return reportRepository.findAllByUserId(id, Sort.by(sortBy))
@@ -88,13 +82,13 @@ public class ReportService {
 
     @Transactional
     public ReportDto createReport(CreateReportRequest request) {
-        if(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())) {
+        if(reportRepository.existsByUserIdAndName(request.userId(), request.name())) {
             throw new DuplicateReportException();
         }
         var report = reportMapper.toEntity(request);
 
         List<Requirement> requirementList = new ArrayList<>();
-        request.getRequirementIds().forEach((id) -> {
+        request.requirementIds().forEach((id) -> {
             Requirement req = requirementRepository.findById(id).orElseThrow(RequirementNotFoundException::new);
             requirementList.add(req);
         });
@@ -103,14 +97,14 @@ public class ReportService {
         reportRepository.save(report);
 
         Set<Measurement> measurementSet = new HashSet<>();
-        request.getMeasurements().forEach((measureDto) -> {
+        request.measurements().forEach((measureDto) -> {
             Measurement measure = measurementMapper.toEntity(measureDto);
             measure.setReport(report);
             measurementSet.add(measure);
         });
         report.setMeasurements(measurementSet);
 
-        reportRepository.flush();;
+        reportRepository.flush();
 
         var reportDto = reportMapper.toDto(report);
         List<RequirementDto> requirementDtos = new ArrayList<>();
@@ -137,8 +131,6 @@ public class ReportService {
             Measurement measure = measurementMapper.toEntity(measureDto);
             measure.setReport(report);
             measurementSet.add(measure);
-
-            System.out.println("Mike:" + measure.getId());
         });
         report.setMeasurements(measurementSet);
 
