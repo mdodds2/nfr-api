@@ -40,7 +40,8 @@ public class RequirementService {
             sortBy = "identifier";
         }
 
-        var group = subCategoryRepository.findById(subCategoryId).orElseThrow(SubCategoryNotFoundException::new);
+        subCategoryRepository.findById(subCategoryId).orElseThrow(SubCategoryNotFoundException::new);
+
         var requirements = requirementRepository.findBySubCategoryId(subCategoryId, Sort.by(sortBy));
         var list = new ArrayList<RequirementDto>();
         requirements.forEach(requirement -> list.add(requirementMapper.toDto(requirement)));
@@ -62,10 +63,6 @@ public class RequirementService {
     public RequirementDto updateRequirement(UUID id, UpdateRequirementRequest request) {
         var requirement = requirementRepository.findById(id).orElseThrow(RequirementNotFoundException::new);
         requirementMapper.update(request, requirement);
-//        if(request.getGroupId() != null) {
-//            var group = groupRepository.findById(request.getGroupId()).orElseThrow(GroupNotFoundException::new);
-//            requirement.setGroup(group);
-//        }
         requirementRepository.save(requirement);
         return requirementMapper.toDto(requirement);
     }

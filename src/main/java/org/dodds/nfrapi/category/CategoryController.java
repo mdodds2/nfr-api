@@ -42,14 +42,14 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<CategoryDto> createCategory(@RequestBody CreateCategoryRequest request, UriComponentsBuilder uriBuilder) {
         var categoryDto = categoryService.createCategory(request);
-        var uri = uriBuilder.path("/groups/{id}").buildAndExpand(categoryDto.getId()).toUri();
+        var uri = uriBuilder.path("/category/{id}").buildAndExpand(categoryDto.getId()).toUri();
         return ResponseEntity.created(uri).body(categoryDto);
     }
 
     @PostMapping("/{id}/subcategories")
     public ResponseEntity<SubCategoryDto> createSubCategory(@PathVariable UUID id, @RequestBody CreateSubCategoryRequest request, UriComponentsBuilder uriBuilder) {
         var categoryDto = categoryService.createSubCategory(id, request);
-        var uri = uriBuilder.path("/groups/{id}").buildAndExpand(categoryDto.getId()).toUri();
+        var uri = uriBuilder.path("/category/{id}").buildAndExpand(categoryDto.getId()).toUri();
         return ResponseEntity.created(uri).body(categoryDto);
     }
 

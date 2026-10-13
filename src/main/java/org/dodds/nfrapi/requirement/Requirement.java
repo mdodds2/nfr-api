@@ -61,7 +61,7 @@ public class Requirement {
     @Column(name = "updated_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime updatedMoment;
 
-    // we don't want to delete a group if we delete a requirement (ie cascading delete)
+    // we don't want to delete a subcategory if we delete a requirement (ie cascading delete)
     @ManyToOne(fetch=FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE,
                                                 CascadeType.DETACH, CascadeType.REFRESH})
     @JoinColumn(name = "category_sub_id")
