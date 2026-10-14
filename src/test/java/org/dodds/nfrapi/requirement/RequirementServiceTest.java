@@ -1,8 +1,6 @@
 package org.dodds.nfrapi.requirement;
 
-import org.dodds.nfrapi.category.SubCategory;
-import org.dodds.nfrapi.category.SubCategoryNotFoundException;
-import org.dodds.nfrapi.category.SubCategoryRepository;
+import org.dodds.nfrapi.category.*;
 
 import org.dodds.nfrapi.common.Priority;
 import org.dodds.nfrapi.common.Status;
@@ -11,18 +9,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RequirementServiceTest {
+
+    @Mock
+    CategoryRepository categoryRepository;
 
     @Mock
     SubCategoryRepository subCategoryRepository;
@@ -39,7 +41,8 @@ class RequirementServiceTest {
     @Test
     void shouldReturnAllRequirements() {
         // Arrange
-        when(requirementRepository.findAll()).thenReturn(new ArrayList<>());
+        var requirement = Requirement.builder().id(UUID.randomUUID()).title("Requirement 1").build();
+        when(requirementRepository.findAll()).thenReturn(List.of(requirement));
 
         // Act
         var requirementsList = requirementService.getAllRequirements();
@@ -120,18 +123,58 @@ class RequirementServiceTest {
         // Arrange
         UUID subCategoryId = UUID.randomUUID();
 
-        SubCategory subCategory = SubCategory.builder()
+        var category = Category.builder().id(UUID.randomUUID()).name("Category 1").build();
+
+        var subCategory = SubCategory.builder()
                 .id(subCategoryId)
                 .name("test subCategory name")
                 .shortName("shortName")
                 .description("test subCategory description")
                 .sortOrder(1)
-                .active(true).build();
+                .active(true)
+                .category(category)
+                .build();
 
+        var requirement = Requirement.builder().id(UUID.randomUUID()).title("Requirement 1 ").build();
+        var requirementDto = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 1 ").build();
+
+        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
+        when(requirementRepository.findBySubCategoryId(subCategoryId, Sort.by("identifier"))).thenReturn(List.of(requirement));
+        when(requirementMapper.toDto(any())).thenReturn(requirementDto);
 
         // Act
+        List<RequirementDto> requirements = requirementService.getRequirementsBySubCategory(subCategoryId, "identifier");
+
+        // Assert
+        assertNotNull(requirements);
+    }
+
+    @Test
+    void shouldReturnAListOfRequirementsBySubCategoryIdSortByOther() {
+        // Arrange
+        UUID subCategoryId = UUID.randomUUID();
+
+        var category = Category.builder().id(UUID.randomUUID()).name("Category 1").build();
+
+        var subCategory = SubCategory.builder()
+                .id(subCategoryId)
+                .name("test subCategory name")
+                .shortName("shortName")
+                .description("test subCategory description")
+                .sortOrder(1)
+                .active(true)
+                .category(category)
+                .build();
+
+        var requirement = Requirement.builder().id(UUID.randomUUID()).title("Requirement 1 ").build();
+        var requirementDto = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 1 ").build();
+
         when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
-        List<RequirementDto> requirements = requirementService.getRequirementsBySubCategory(subCategoryId, "");
+        when(requirementRepository.findBySubCategoryId(subCategoryId, Sort.by("identifier"))).thenReturn(List.of(requirement));
+        when(requirementMapper.toDto(any())).thenReturn(requirementDto);
+
+        // Act
+        List<RequirementDto> requirements = requirementService.getRequirementsBySubCategory(subCategoryId, "other");
 
         // Assert
         assertNotNull(requirements);
@@ -420,4 +463,21 @@ class RequirementServiceTest {
         assertThrows(RequirementNotFoundException.class, () -> requirementService.deleteRequirement(uuid));
     }
 
+    @Test
+    void shouldGetNextIdentifier() {
+        var categoryId = UUID.randomUUID();
+        Category category = Category.builder().id(categoryId).shortName("catShortName").build();
+
+        var subCategoryId = UUID.randomUUID();
+        var subCategory = SubCategory.builder().id(UUID.randomUUID()).shortName("subCatShortName").build();
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+        when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
+        when(requirementRepository.countBySubCategoryId(subCategoryId)).thenReturn(0);
+
+        var result = requirementService.getNextIdentifier(categoryId, subCategoryId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getIdentifier()).isEqualTo("catShortName-subCatShortName-1");
+    }
 }

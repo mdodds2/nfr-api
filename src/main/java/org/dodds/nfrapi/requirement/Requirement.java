@@ -3,6 +3,7 @@ package org.dodds.nfrapi.requirement;
 import jakarta.persistence.*;
 import lombok.*;
 import org.dodds.nfrapi.category.SubCategory;
+import org.dodds.nfrapi.common.ExcludedGeneratedFromJacoco;
 import org.dodds.nfrapi.common.Priority;
 import org.dodds.nfrapi.common.Status;
 import org.dodds.nfrapi.report.Report;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 @Table(name = "requirements")
 public class Requirement {
 

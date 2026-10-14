@@ -1,15 +1,14 @@
 package org.dodds.nfrapi.report;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@Getter
+@Builder
+@Data
 @AllArgsConstructor
-@ToString
+@NoArgsConstructor
 public class UpdateReportRequest {
     private UUID userId;
     private String name;

@@ -58,25 +58,41 @@ public class UserServiceTest {
     @Test
     void shouldGetAllUsersSortedByEmail() {
         var user = User.builder().id(UUID.randomUUID()).name("Test User").build();
+        var userDto = UserDto.builder().id(UUID.randomUUID()).name("Test User").build();
 
         when(userRepository.findAll(Sort.by("email"))).thenReturn(List.of(user));
+        when(mapper.toDto(user)).thenReturn(userDto);
 
         var results = userService.getAllUsers("email");
+
+        assertThat(results).containsExactly(userDto);
+    }
+
+    @Test
+    void shouldGetAllUsersSortedByOther() {
+        var user = User.builder().id(UUID.randomUUID()).name("Test User").build();
+        var userDto = UserDto.builder().id(UUID.randomUUID()).name("Test User").build();
+
+        when(userRepository.findAll(Sort.by("name"))).thenReturn(List.of(user));
+        when(mapper.toDto(user)).thenReturn(userDto);
+
+        var results = userService.getAllUsers("other");
 
         assertNotNull(results);
         assertThat(results).hasSize(1);
     }
 
     @Test
-    void shouldGetAllUsersSortedByOther() {
+    void shouldGetAllUsersSortedByNull() {
         var user = User.builder().id(UUID.randomUUID()).name("Test User").build();
+        var userDto = UserDto.builder().id(UUID.randomUUID()).name("Test User").build();
 
         when(userRepository.findAll(Sort.by("name"))).thenReturn(List.of(user));
+        when(mapper.toDto(user)).thenReturn(userDto);
 
-        var results = userService.getAllUsers("other");
+        var results = userService.getAllUsers(null);
 
-        assertNotNull(results);
-        assertThat(results).hasSize(1);
+        assertThat(results).containsExactly(userDto);
     }
 
     @Test
@@ -203,7 +219,8 @@ public class UserServiceTest {
         assertThat(result).isSameAs(dto);
         assertThat(user.getPassword()).isEqualTo("ENCODED");
         assertThat(user.getRole()).isEqualTo(Role.USER);
-        verify(userRepository).save(user);    }
+        verify(userRepository).save(user);
+    }
 
     @Test
     void shouldNotRegisterUserExistingUser() {
@@ -227,6 +244,7 @@ public class UserServiceTest {
 
         var result = userService.updateUser(id, request);
 
+        assertThat(result).isSameAs(dto);
         verify(mapper).update(request, user);
         verify(userRepository).save(user);
     }
