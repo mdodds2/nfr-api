@@ -19,10 +19,9 @@ public class UserService {
 
     public List<UserDto> getAllUsers(String sortBy) {
 
-        if (!Set.of("name", "email").contains(sortBy))
-            sortBy = "name";
+        var sort = "email".equals(sortBy) ? "email" : "name";
 
-        return userRepository.findAll(Sort.by(sortBy))
+        return userRepository.findAll(Sort.by(sort))
                 .stream()
                 .map(userMapper::toDto)
                 .toList();

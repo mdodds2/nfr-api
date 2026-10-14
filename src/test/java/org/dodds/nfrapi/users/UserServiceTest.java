@@ -1,6 +1,5 @@
-package org.dodds.nfrapi.user;
+package org.dodds.nfrapi.users;
 
-import org.dodds.nfrapi.users.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,21 +36,27 @@ public class UserServiceTest {
     UserService userService;
 
     @Test
-    void shouldGetAllUsersByName() {
+    void shouldGetAllUsersSortedByName() {
         var user1 = User.builder().id(UUID.randomUUID()).name("Test User1").build();
         var user2 = User.builder().id(UUID.randomUUID()).name("Test User2").build();
         var user3 = User.builder().id(UUID.randomUUID()).name("Test User3").build();
 
+        var userDto1 = UserDto.builder().id(UUID.randomUUID()).name("Test User1").build();
+        var userDto2 = UserDto.builder().id(UUID.randomUUID()).name("Test User2").build();
+        var userDto3 = UserDto.builder().id(UUID.randomUUID()).name("Test User3").build();
+
         when(userRepository.findAll(Sort.by("name"))).thenReturn(List.of(user1, user2, user3));
+        when(mapper.toDto(user1)).thenReturn(userDto1);
+        when(mapper.toDto(user2)).thenReturn(userDto2);
+        when(mapper.toDto(user3)).thenReturn(userDto3);
 
         var results = userService.getAllUsers("name");
 
-        assertNotNull(results);
-        assertThat(results).hasSize(3);
+        assertThat(results).containsExactly(userDto1, userDto2, userDto3);
     }
 
     @Test
-    void shouldGetAllUsersByEmail() {
+    void shouldGetAllUsersSortedByEmail() {
         var user = User.builder().id(UUID.randomUUID()).name("Test User").build();
 
         when(userRepository.findAll(Sort.by("email"))).thenReturn(List.of(user));
@@ -63,7 +68,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void shouldGetAllUsersByOther() {
+    void shouldGetAllUsersSortedByOther() {
         var user = User.builder().id(UUID.randomUUID()).name("Test User").build();
 
         when(userRepository.findAll(Sort.by("name"))).thenReturn(List.of(user));
@@ -86,7 +91,7 @@ public class UserServiceTest {
 
         userService.changePassword(id, request);
 
-        verify(userRepository).save(any());
+        verify(userRepository).save(user);
         assertThat(user.getPassword()).isEqualTo("ENCODED");
     }
 
@@ -98,6 +103,7 @@ public class UserServiceTest {
         when(userRepository.findById(eq(id))).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.changePassword(id, request));
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -110,6 +116,7 @@ public class UserServiceTest {
         when(passwordEncoder.matches(any(), any())).thenReturn(false);
 
         assertThrows(AccessDeniedException.class, () -> userService.changePassword(id, request));
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -125,12 +132,13 @@ public class UserServiceTest {
     }
 
     @Test
-    void shouldDeleteUserNotFound() {
+    void shouldNotDeleteUserNotFound() {
         var id = UUID.randomUUID();
 
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.deleteUser(id));
+        verify(userRepository, never()).delete(any());
     }
 
     @Test
@@ -144,7 +152,7 @@ public class UserServiceTest {
 
         var result = userService.getUser(id);
 
-        assertThat(result.getId().equals(id));
+        assertThat(result.getId()).isEqualTo(id);
     }
 
     @Test
@@ -167,7 +175,7 @@ public class UserServiceTest {
 
         var result = userService.getUserByEmail(user.getEmail());
 
-        assertThat(result.getEmail().equals(user.getEmail()));
+        assertThat(result.getEmail()).isEqualTo(user.getEmail());
     }
 
     @Test
@@ -182,22 +190,20 @@ public class UserServiceTest {
     @Test
     void shouldRegisterUser() {
         var request = RegisterUserRequest.builder().name("Test User").email("example@test.com").password("NEW").build();
-        var user = User.builder().name("Test User").email("example@test.com").build();
+        var user = User.builder().name("Test User").password("NEW").email("example@test.com").build();
         var dto = UserDto.builder().id(UUID.randomUUID()).name("Test User").email("example@test.com").build();
 
         when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
-        when(passwordEncoder.encode(user.getPassword())).thenReturn("ENCODED");
+        when(passwordEncoder.encode("NEW")).thenReturn("ENCODED");
         when(mapper.toEntity(request)).thenReturn(user);
         when(mapper.toDto(user)).thenReturn(dto);
 
         var result = userService.registerUser(request);
 
-        assertThat(result.getId()).isNotNull();
-        assertThat(result.getName()).isEqualTo(request.getName());
-        assertThat(result.getEmail()).isEqualTo(request.getEmail());
-
-        verify(userRepository).save(any());
-    }
+        assertThat(result).isSameAs(dto);
+        assertThat(user.getPassword()).isEqualTo("ENCODED");
+        assertThat(user.getRole()).isEqualTo(Role.USER);
+        verify(userRepository).save(user);    }
 
     @Test
     void shouldNotRegisterUserExistingUser() {
@@ -221,8 +227,7 @@ public class UserServiceTest {
 
         var result = userService.updateUser(id, request);
 
-        assertThat(result.getEmail()).isEqualTo(request.getEmail());
-        assertThat(result.getEmail()).isNotEqualTo(user.getEmail());
+        verify(mapper).update(request, user);
         verify(userRepository).save(user);
     }
 
