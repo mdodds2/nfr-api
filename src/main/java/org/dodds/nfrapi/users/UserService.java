@@ -6,6 +6,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public Iterable<UserDto> getAllUsers(String sortBy) {
+    public List<UserDto> getAllUsers(String sortBy) {
 
         if (!Set.of("name", "email").contains(sortBy))
             sortBy = "name";
@@ -69,7 +70,7 @@ public class UserService {
             throw new AccessDeniedException("Password does not match");
         }
 
-        user.setPassword(request.getNewPassword());
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
 

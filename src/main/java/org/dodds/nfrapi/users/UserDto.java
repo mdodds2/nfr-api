@@ -1,12 +1,13 @@
 package org.dodds.nfrapi.users;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.*;
 
 import java.util.UUID;
 
+@Builder
+@Data
 @AllArgsConstructor
-@Getter
+@NoArgsConstructor
 public class UserDto {
     private UUID id;
     private String name;

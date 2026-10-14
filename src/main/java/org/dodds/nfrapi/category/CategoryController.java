@@ -32,7 +32,6 @@ public class CategoryController {
     public List<SubCategoryDto> getSubCategories(
             @PathVariable UUID id,
             @RequestParam(required = false, defaultValue = "sortOrder", name = "sort") String sortBy)  {
-        System.out.println("MIKE LOOK HERE CONTROLLER:  >>" + sortBy);
         return categoryService.getSubCategories(id, sortBy);
     }
 
