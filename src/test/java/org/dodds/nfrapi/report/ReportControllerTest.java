@@ -42,7 +42,7 @@ public class ReportControllerTest {
         var report2 = ReportDto.builder().id(UUID.randomUUID()).name("Report 2").build();
         var report3 = ReportDto.builder().id(UUID.randomUUID()).name("Report 3").build();
 
-        when(reportService.getAllReports(any())).thenReturn(List.of(report1, report2, report3));
+        when(reportService.getAllReports("")).thenReturn(List.of(report1, report2, report3));
 
         mockMvc.perform(get("/reports"))
                 .andExpect(status().isOk())
@@ -171,11 +171,25 @@ public class ReportControllerTest {
     }
 
     @Test
+    void shouldNotUpdateAReportBadRequest() throws Exception {
+        var request = UpdateReportRequest.builder().build();
+        var reportId = UUID.randomUUID();
+
+        when(reportService.updateReport(eq(reportId), any())).thenThrow(new ReportNotFoundException());
+
+        mockMvc.perform(put("/reports/{id}", reportId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldDeleteReport() throws Exception {
         var reportId = UUID.randomUUID();
         doNothing().when(reportService).deleteReport(reportId);
         mockMvc.perform(delete("/reports/{id}", reportId))
                 .andExpect(status().isNoContent());
+        verify(reportService).deleteReport(reportId);
     }
 
     @Test
@@ -184,6 +198,7 @@ public class ReportControllerTest {
         doThrow(new ReportNotFoundException()).when(reportService).deleteReport(reportId);
         mockMvc.perform(delete("/reports/{id}", reportId))
                 .andExpect(status().isNotFound());
+        verify(reportService, never()).deleteReport(reportId);
     }
 
 }

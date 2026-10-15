@@ -1,7 +1,5 @@
 package org.dodds.nfrapi.authentication;
 
-import org.dodds.nfrapi.authentication.*;
-import org.dodds.nfrapi.category.CategoryNotFoundException;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -21,7 +19,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -84,7 +81,7 @@ public class AuthServiceTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
 
-        assertThrows(NoSuchElementException.class, () -> authService.login(request));
+        assertThrows(BadCredentialsException.class, () -> authService.login(request));
     }
 
     @Test
@@ -121,7 +118,7 @@ public class AuthServiceTest {
         when(refreshJwt.getUserId()).thenReturn(userId);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(NoSuchElementException.class, () -> authService.refreshAccessToken("refresh-token"));
+        assertThrows(MissingResNoSuchElementException.class, () -> authService.refreshAccessToken("refresh-token"));
     }
 
     @Test

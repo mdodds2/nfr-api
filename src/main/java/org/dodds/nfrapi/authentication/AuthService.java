@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.MissingResourceException;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -39,7 +40,7 @@ public class AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BadCredentialsException("Email id not found"));
         var accessToken = jwtService.generateAccessToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
 
@@ -52,7 +53,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid refresh token");
         }
 
-        var user = userRepository.findById(jwt.getUserId()).orElseThrow();
+        var user = userRepository.findById(jwt.getUserId()).orElseThrow(() -> new BadCredentialsException("User not found."));
         return jwtService.generateAccessToken(user);
     }
 }

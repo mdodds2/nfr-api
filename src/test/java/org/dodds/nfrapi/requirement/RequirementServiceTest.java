@@ -268,7 +268,7 @@ class RequirementServiceTest {
         assertEquals(result.getRationale(), request.getRationale());
         assertEquals(result.getSource(), request.getSource());
         assertEquals(result.getRiskIfViolated(), request.getRiskIfViolated());
-        verify(requirementRepository).saveAndFlush(any());
+        verify(requirementRepository).saveAndFlush(mockRequirement);
     }
 
     @Test
@@ -295,6 +295,7 @@ class RequirementServiceTest {
         // Act / Assert
         when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(true);
         assertThrows(DuplicateRequirementException.class, () -> requirementService.createRequirement(request));
+        verify(requirementRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -343,6 +344,7 @@ class RequirementServiceTest {
         when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(false);
         when(subCategoryRepository.findById(mockRequirement.getSubCategory().getId())).thenReturn(Optional.empty());
         assertThrows(SubCategoryNotFoundException.class, () -> requirementService.createRequirement(request));
+        verify(requirementRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -404,7 +406,7 @@ class RequirementServiceTest {
 
         // Assert
         assertNotNull(requirementService.updateRequirement(mockRequirement.getId(), request));
-        verify(requirementRepository).save(any());
+        verify(requirementRepository).save(mockRequirement);
     }
 
     @Test
@@ -430,6 +432,7 @@ class RequirementServiceTest {
         // Act / Assert
         when(requirementRepository.findById(uuid)).thenReturn(Optional.empty());
         assertThrows(RequirementNotFoundException.class, () -> requirementService.updateRequirement(uuid, request));
+        verify(requirementRepository, never()).save(any());
     }
 
     @Test
@@ -466,6 +469,7 @@ class RequirementServiceTest {
         // Act / Assert
         when(requirementRepository.findById(uuid)).thenReturn(Optional.empty());
         assertThrows(RequirementNotFoundException.class, () -> requirementService.deleteRequirement(uuid));
+        verify(requirementRepository, never()).delete(any());
     }
 
     @Test

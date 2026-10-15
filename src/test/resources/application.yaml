@@ -13,9 +13,9 @@ spring:
       enabled: true
       path: /h2-console
 
-  logging:
-    level:
-      root: INFO
-      org.hibernate: ERROR
-      org.springframework.web: DEBUG
-      org.springframework.security: DEBUG
+logging:
+  level:
+    root: INFO
+    org.hibernate: ERROR
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
