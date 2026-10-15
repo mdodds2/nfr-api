@@ -71,20 +71,4 @@ public class UserController {
         userService.changePassword(id, request);
     }
 
-    @ExceptionHandler(DuplicateUserException.class)
-    public ResponseEntity<Map<String, String>> handleDuplicateUser() {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                Map.of("message", "Email is already registered.")
-        );
-    }
-
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Void> handleUserNotFound() {
-        return ResponseEntity.notFound().build();
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Void> handleAccessDenied() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
 }

@@ -60,24 +60,4 @@ public class RequirementController {
         return ResponseEntity.noContent().build();
     }
 
-    @ExceptionHandler(DuplicateRequirementException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateRequirementException(DuplicateRequirementException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(RequirementNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleRequirementNotFound(RequirementNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(SubCategoryNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleSubCategoryNotFound(SubCategoryNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleCategoryNotFound(CategoryNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
 }

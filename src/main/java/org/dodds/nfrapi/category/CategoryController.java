@@ -75,25 +75,4 @@ public class CategoryController {
         return ResponseEntity.noContent().build();
     }
 
-
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleCategoryNotFound(CategoryNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(DuplicateCategoryException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateCategoryException(DuplicateCategoryException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(SubCategoryNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleSubCategoryNotFoundException(SubCategoryNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(DuplicateSubCategoryException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateSubCategoryName(DuplicateSubCategoryException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
-    }
-
 }

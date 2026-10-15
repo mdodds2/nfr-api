@@ -175,12 +175,11 @@ public class ReportControllerTest {
         var request = UpdateReportRequest.builder().build();
         var reportId = UUID.randomUUID();
 
-        when(reportService.updateReport(eq(reportId), any())).thenThrow(new ReportNotFoundException());
-
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+        verify(reportService, never()).updateReport(any(), any());
     }
 
     @Test

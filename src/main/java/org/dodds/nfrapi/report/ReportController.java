@@ -53,13 +53,4 @@ public class ReportController {
         return ResponseEntity.noContent().build();
     }
 
-    @ExceptionHandler(DuplicateReportException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateReportException(DuplicateReportException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(ReportNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleRequirementNotFound(ReportNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
 }
