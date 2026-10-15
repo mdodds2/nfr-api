@@ -207,13 +207,6 @@ public class ReportControllerTest {
                 .description("some description")
                 .build();
 
-        var id = UUID.randomUUID();
-        var dto = ReportDto.builder()
-                .id(id)
-                .name("report1")
-                .description("some description")
-                .build();
-
         mockMvc.perform((post("/reports")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
@@ -243,14 +236,7 @@ public class ReportControllerTest {
                 .description("some description")
                 .build();
 
-        var id = UUID.randomUUID();
-        var dto = ReportDto.builder()
-                .id(id)
-                .name("report1")
-                .description("some description")
-                .build();
-
-        mockMvc.perform((put("/reports/{id}", id)
+        mockMvc.perform((put("/reports/{id}", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
@@ -263,6 +249,38 @@ public class ReportControllerTest {
                 .userId(UUID.randomUUID())
                 .name("")
                 .description("some description")
+                .build();
+
+        var id = UUID.randomUUID();
+
+        mockMvc.perform((put("/reports/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))))
+                .andExpect(status().isBadRequest());
+        verify(reportService, never()).updateReport(any(), any());
+    }
+
+    @Test
+    void shouldNotCreateAReportBlankDescription() throws Exception {
+        var request = CreateReportRequest.builder()
+                .userId(UUID.randomUUID())
+                .name("report1")
+                .description("")
+                .build();
+
+        mockMvc.perform((post("/reports")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))))
+                .andExpect(status().isBadRequest());
+        verify(reportService, never()).createReport(any());
+    }
+
+    @Test
+    void shouldNotUpdateAReportBlankDescription() throws Exception {
+        var request = UpdateReportRequest.builder()
+                .userId(UUID.randomUUID())
+                .name("report1")
+                .description("")
                 .build();
 
         var id = UUID.randomUUID();

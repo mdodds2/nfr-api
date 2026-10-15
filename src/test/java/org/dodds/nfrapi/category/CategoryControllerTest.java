@@ -52,7 +52,6 @@ class CategoryControllerTest {
 
     @Test
     void shouldReturn409WhenCategoryIsDuplicate() throws Exception {
-        var id = UUID.randomUUID();
         var request = CreateCategoryRequest.builder().name("name").build();
         when(categoryService.createCategory(any())).thenThrow(new DuplicateCategoryException());
 

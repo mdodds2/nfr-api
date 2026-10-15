@@ -38,10 +38,7 @@ public class AuthServiceTest {
     AuthService authService;
 
     @AfterEach
-    void tearDown() { SecurityContextHolder.clearContext(); }
-
-    @AfterEach
-    void clearContext() {
+    void tearDown() {
         SecurityContextHolder.clearContext();
     }
 
@@ -113,12 +110,6 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldNotRefreshAccessTokenGarbageToken() throws Exception {
-        when(jwtService.parseToken("refresh-token")).thenReturn(null);
-        assertThrows(BadCredentialsException.class, () -> authService.refreshAccessToken("refresh-token"));
-    }
-
-    @Test
     void shouldNotRefreshAccessUserNotFound() throws Exception {
         var userId = UUID.randomUUID();
         var refreshJwt = mock(Jwt.class);
@@ -158,6 +149,18 @@ public class AuthServiceTest {
 
         authService.login(request);
 
-        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();    }
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    void shouldNotRefreshAccessTokenExpiredToken() {
+        var jwt = mock(Jwt.class);
+        when(jwtService.parseToken("refresh-token")).thenReturn(jwt);
+        when(jwt.isExpired()).thenReturn(true);
+
+        assertThrows(BadCredentialsException.class, () -> authService.refreshAccessToken("refresh-token"));
+
+        verify(userRepository, never()).findById(any());
+    }
 
 }
