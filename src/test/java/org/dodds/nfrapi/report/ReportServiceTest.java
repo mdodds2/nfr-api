@@ -441,4 +441,30 @@ class ReportServiceTest {
         assertThat(reportDto.getMeasurements()).containsExactly(measurementDto);
     }
 
+    @Test
+    void shouldGetAllReportsSortedByNull() throws Exception {
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+        var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
+        var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
+
+        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
+        when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
+
+        var result = reportService.getAllReports(null);
+
+        assertThat(result).containsExactly(reportDto);
+        assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
+        assertThat(reportDto.getMeasurements()).containsExactly(measurementDto);
+    }
+
 }
