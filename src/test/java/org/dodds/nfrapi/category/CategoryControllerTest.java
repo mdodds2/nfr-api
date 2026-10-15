@@ -56,7 +56,7 @@ class CategoryControllerTest {
         var request = CreateCategoryRequest.builder().name("name").build();
         when(categoryService.createCategory(any())).thenThrow(new DuplicateCategoryException());
 
-        mockMvc.perform(post("/categories", id)
+        mockMvc.perform(post("/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());

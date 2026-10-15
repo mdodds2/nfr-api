@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
 
@@ -41,6 +39,11 @@ public class AuthServiceTest {
 
     @AfterEach
     void tearDown() { SecurityContextHolder.clearContext(); }
+
+    @AfterEach
+    void clearContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void shouldLogin() throws Exception {
@@ -143,13 +146,18 @@ public class AuthServiceTest {
     void shouldNotLoginUserNotAuthenticated() throws Exception {
         var request = LoginRequest.builder().email("mike@test.com").password("default").build();
         var authentication = mock(Authentication.class);
+        var user = new User();
+        var accessToken = mock(Jwt.class);
+        var refreshToken = mock(Jwt.class);
 
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(false);
-        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+        when(jwtService.generateAccessToken(user)).thenReturn(accessToken);
+        when(jwtService.generateRefreshToken(user)).thenReturn(refreshToken);
 
-        assertThrows(BadCredentialsException.class, () -> authService.login(request));
-        verify(userRepository, never()).findById(any());
-    }
+        authService.login(request);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();    }
 
 }

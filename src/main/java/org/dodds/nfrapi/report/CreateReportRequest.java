@@ -20,7 +20,7 @@ public class CreateReportRequest {
     @NotNull
     private UUID userId;
 
-    @NotNull
+    @NotBlank
     @Size(max=255)
     private String name;
 

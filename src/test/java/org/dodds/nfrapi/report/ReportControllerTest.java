@@ -214,12 +214,26 @@ public class ReportControllerTest {
                 .description("some description")
                 .build();
 
-        when(reportService.createReport(any(CreateReportRequest.class))).thenReturn(dto);
+        mockMvc.perform((post("/reports")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))))
+                .andExpect(status().isBadRequest());
+        verify(reportService, never()).createReport(any());
+    }
+
+    @Test
+    void shouldNotCreateAReportBlankName() throws Exception {
+        var request = CreateReportRequest.builder()
+                .userId(UUID.randomUUID())
+                .name("")
+                .description("some description")
+                .build();
 
         mockMvc.perform((post("/reports")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
+        verify(reportService, never()).createReport(any());
     }
 
     @Test
@@ -236,12 +250,28 @@ public class ReportControllerTest {
                 .description("some description")
                 .build();
 
-        when(reportService.updateReport(eq(id), any(UpdateReportRequest.class))).thenReturn(dto);
+        mockMvc.perform((put("/reports/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))))
+                .andExpect(status().isBadRequest());
+        verify(reportService, never()).updateReport(any(), any());
+    }
+
+    @Test
+    void shouldNotUpdateAReportBlankName() throws Exception {
+        var request = UpdateReportRequest.builder()
+                .userId(UUID.randomUUID())
+                .name("")
+                .description("some description")
+                .build();
+
+        var id = UUID.randomUUID();
 
         mockMvc.perform((put("/reports/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
+        verify(reportService, never()).updateReport(any(), any());
     }
 
 }
