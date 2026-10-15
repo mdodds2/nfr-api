@@ -1,10 +1,6 @@
 package org.dodds.nfrapi.requirement;
 
 import lombok.AllArgsConstructor;
-import org.dodds.nfrapi.category.CategoryNotFoundException;
-import org.dodds.nfrapi.category.SubCategoryNotFoundException;
-import org.dodds.nfrapi.common.ErrorDto;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -58,26 +54,6 @@ public class RequirementController {
     public ResponseEntity<Void> deleteRequirement(@PathVariable UUID id) {
         requirementService.deleteRequirement(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @ExceptionHandler(DuplicateRequirementException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateRequirementException(DuplicateRequirementException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(RequirementNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleRequirementNotFound(RequirementNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(SubCategoryNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleSubCategoryNotFound(SubCategoryNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleCategoryNotFound(CategoryNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
     }
 
 }

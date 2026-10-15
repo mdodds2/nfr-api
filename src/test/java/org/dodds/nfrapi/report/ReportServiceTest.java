@@ -217,6 +217,30 @@ class ReportServiceTest {
         assertThat(result.size()).isEqualTo(1);
     }
 
+    @DisplayName("Get report - for user sorted by null")
+    @Test
+    void getReportForUserSortedByNull() {
+        // Arrange
+        UUID userid = UUID.randomUUID();
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+
+        when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+
+        // Act
+        var result = reportService.getReportsForUser(userid, null);
+
+        // Assert
+        assertThat(result).containsExactly(reportDto);
+    }
 
     @DisplayName("Create report with an unknown requirement id")
     @Test
@@ -411,6 +435,32 @@ class ReportServiceTest {
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
         var result = reportService.getAllReports("other");
+
+        assertThat(result).containsExactly(reportDto);
+        assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
+        assertThat(reportDto.getMeasurements()).containsExactly(measurementDto);
+    }
+
+    @Test
+    void shouldGetAllReportsSortedByNull() throws Exception {
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+        var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
+        var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
+
+        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
+        when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
+
+        var result = reportService.getAllReports(null);
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);

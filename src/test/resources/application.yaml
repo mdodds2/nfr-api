@@ -15,7 +15,6 @@ spring:
 
 logging:
   level:
-    root: INFO
-    org.hibernate: ERROR
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
+    root: WARN
+    org.dodds.nfrapi: INFO
+    org.springframework.security: WARN

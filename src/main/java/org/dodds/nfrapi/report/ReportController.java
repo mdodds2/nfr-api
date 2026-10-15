@@ -3,8 +3,6 @@ package org.dodds.nfrapi.report;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.dodds.nfrapi.common.ErrorDto;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -53,13 +51,4 @@ public class ReportController {
         return ResponseEntity.noContent().build();
     }
 
-    @ExceptionHandler(DuplicateReportException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateReportException(DuplicateReportException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(ReportNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleRequirementNotFound(ReportNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
 }

@@ -1,8 +1,6 @@
 package org.dodds.nfrapi.category;
 
 import lombok.AllArgsConstructor;
-import org.dodds.nfrapi.common.ErrorDto;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -73,27 +71,6 @@ public class CategoryController {
     public ResponseEntity<Void> deleteSubCategory(@PathVariable UUID categoryId, @PathVariable UUID id) {
         categoryService.deleteSubCategory(id, categoryId);
         return ResponseEntity.noContent().build();
-    }
-
-
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleCategoryNotFound(CategoryNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(DuplicateCategoryException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateCategoryException(DuplicateCategoryException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(SubCategoryNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleSubCategoryNotFoundException(SubCategoryNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
-    }
-
-    @ExceptionHandler(DuplicateSubCategoryException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateSubCategoryName(DuplicateSubCategoryException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
     }
 
 }
