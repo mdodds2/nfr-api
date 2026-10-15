@@ -162,7 +162,7 @@ class UserControllerTest {
         var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").password("NEW").build();
         var userDto = UserDto.builder().id(id).name("Test User").email("user@example.com").build();
 
-        when(userService.updateUser(id, request)).thenReturn(userDto);
+        when(userService.updateUser(eq(id), any(UpdateUserRequest.class))).thenReturn(userDto);
 
         mockMvc.perform(put("/users/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -178,7 +178,7 @@ class UserControllerTest {
         var id = UUID.randomUUID();
         var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").password("NEW").build();
 
-        when(userService.updateUser(id, request)).thenThrow(new UserNotFoundException());
+        when(userService.updateUser(eq(id), any(UpdateUserRequest.class))).thenThrow(new UserNotFoundException());
 
         mockMvc.perform(put("/users/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)

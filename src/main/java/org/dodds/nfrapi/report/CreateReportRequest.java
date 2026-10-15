@@ -22,9 +22,11 @@ public class CreateReportRequest {
 
     @NotBlank
     @Size(max=255)
-
     private String name;
+
+    @NotBlank
     private String description;
+
     private List<UUID> requirementIds;
 
     @Valid

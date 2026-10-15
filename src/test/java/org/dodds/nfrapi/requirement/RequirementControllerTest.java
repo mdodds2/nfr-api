@@ -151,7 +151,7 @@ public class RequirementControllerTest {
         var id = UUID.randomUUID();
         var dto = RequirementDto.builder().id(id).title("requirement 1").description("Some Description").build();
 
-        when(requirementService.createRequirement(request)).thenReturn(dto);
+        when(requirementService.createRequirement(any(CreateRequirementRequest.class))).thenReturn(dto);
 
         mockMvc.perform(post("/requirements")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -169,7 +169,7 @@ public class RequirementControllerTest {
                 .identifier("some identifier")
                 .build();
 
-        when(requirementService.createRequirement(request)).thenThrow(new DuplicateRequirementException());
+        when(requirementService.createRequirement(any(CreateRequirementRequest.class))).thenThrow(new DuplicateRequirementException());
 
         mockMvc.perform(post("/requirements")
                         .contentType(MediaType.APPLICATION_JSON)

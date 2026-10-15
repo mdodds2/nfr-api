@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
 
@@ -40,7 +38,9 @@ public class AuthServiceTest {
     AuthService authService;
 
     @AfterEach
-    void tearDown() { SecurityContextHolder.clearContext(); }
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void shouldLogin() throws Exception {
@@ -103,9 +103,10 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldNotRefreshAccessTokenGarbageToken() throws Exception {
+    void shouldNotRefreshAccessTokenParsedTokenIsNull() {
         when(jwtService.parseToken("refresh-token")).thenReturn(null);
         assertThrows(BadCredentialsException.class, () -> authService.refreshAccessToken("refresh-token"));
+        verify(userRepository, never()).findById(any());
     }
 
     @Test
@@ -130,6 +131,36 @@ public class AuthServiceTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         assertThat(authService.getCurrentUser()).isSameAs(user);
+    }
+
+    @Test
+    void shouldNotLoginUserNotAuthenticated() throws Exception {
+        var request = LoginRequest.builder().email("mike@test.com").password("default").build();
+        var authentication = mock(Authentication.class);
+        var user = new User();
+        var accessToken = mock(Jwt.class);
+        var refreshToken = mock(Jwt.class);
+
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(false);
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+        when(jwtService.generateAccessToken(user)).thenReturn(accessToken);
+        when(jwtService.generateRefreshToken(user)).thenReturn(refreshToken);
+
+        authService.login(request);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    void shouldNotRefreshAccessTokenExpiredToken() {
+        var jwt = mock(Jwt.class);
+        when(jwtService.parseToken("refresh-token")).thenReturn(jwt);
+        when(jwt.isExpired()).thenReturn(true);
+
+        assertThrows(BadCredentialsException.class, () -> authService.refreshAccessToken("refresh-token"));
+
+        verify(userRepository, never()).findById(any());
     }
 
 }
