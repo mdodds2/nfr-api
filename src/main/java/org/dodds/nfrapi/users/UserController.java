@@ -5,13 +5,10 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.dodds.nfrapi.report.ReportDto;
 import org.dodds.nfrapi.report.ReportService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Map;
 import java.util.UUID;
 
 @RestController

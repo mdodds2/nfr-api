@@ -17,4 +17,4 @@ logging:
   level:
     root: WARN
     org.dodds.nfrapi: INFO
-    org.springframework.security: DEBUG
+    org.springframework.security: WARN

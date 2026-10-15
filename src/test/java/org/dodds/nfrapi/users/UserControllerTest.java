@@ -80,7 +80,8 @@ class UserControllerTest {
         when(userService.getUser(id)).thenThrow(new UserNotFoundException());
 
         mockMvc.perform(get("/users/{id}", id))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("User not found"));
     }
 
     @Test
@@ -141,7 +142,8 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("User already exists."));
     }
 
     @Test

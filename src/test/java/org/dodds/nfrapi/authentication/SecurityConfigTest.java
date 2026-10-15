@@ -21,7 +21,7 @@ class SecurityConfigTest {
                 .andExpect(status().isForbidden());
     }
     @Test
-    void shouldReturn401WhenNotAuthenticated() throws Exception {
+    void shouldReturn403WhenNotAuthenticated() throws Exception {
         mockMvc.perform(get("/categories"))
                 .andExpect(status().isUnauthorized());
     }
