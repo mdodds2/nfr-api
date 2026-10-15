@@ -198,7 +198,7 @@ public class ReportControllerTest {
         doThrow(new ReportNotFoundException()).when(reportService).deleteReport(reportId);
         mockMvc.perform(delete("/reports/{id}", reportId))
                 .andExpect(status().isNotFound());
-        verify(reportService, never()).deleteReport(reportId);
+        verify(reportService).deleteReport(reportId);
     }
 
 }

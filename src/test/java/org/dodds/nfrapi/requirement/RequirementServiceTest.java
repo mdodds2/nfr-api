@@ -469,7 +469,7 @@ class RequirementServiceTest {
         // Act / Assert
         when(requirementRepository.findById(uuid)).thenReturn(Optional.empty());
         assertThrows(RequirementNotFoundException.class, () -> requirementService.deleteRequirement(uuid));
-        verify(requirementRepository, never()).delete(any());
+        verify(requirementRepository, never()).deleteById(any());
     }
 
     @Test

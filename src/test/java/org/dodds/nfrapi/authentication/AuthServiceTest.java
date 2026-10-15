@@ -118,7 +118,7 @@ public class AuthServiceTest {
         when(refreshJwt.getUserId()).thenReturn(userId);
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(MissingResNoSuchElementException.class, () -> authService.refreshAccessToken("refresh-token"));
+        assertThrows(BadCredentialsException.class, () -> authService.refreshAccessToken("refresh-token"));
     }
 
     @Test
