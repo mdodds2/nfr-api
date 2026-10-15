@@ -18,7 +18,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RequirementServiceTest {
@@ -42,13 +42,16 @@ class RequirementServiceTest {
     void shouldReturnAllRequirements() {
         // Arrange
         var requirement = Requirement.builder().id(UUID.randomUUID()).title("Requirement 1").build();
+        var requirementDto = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 1").build();
+
         when(requirementRepository.findAll()).thenReturn(List.of(requirement));
+        when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
 
         // Act
-        var requirementsList = requirementService.getAllRequirements();
+        var result = requirementService.getAllRequirements();
 
         // Assert
-        assertNotNull(requirementsList);
+        assertThat(result).containsExactly(requirementDto);
     }
 
     @Test
@@ -187,7 +190,7 @@ class RequirementServiceTest {
 
         // Act / Assert
         //when(subCategoryRepository.findById(uuid)).thenReturn(Optional.empty());
-        when(subCategoryRepository.findById(uuid)).thenThrow(new SubCategoryNotFoundException());
+        when(subCategoryRepository.findById(uuid)).thenReturn(Optional.empty());
         assertThrows(SubCategoryNotFoundException.class, () -> requirementService.getRequirementsBySubCategory(uuid, "title"));
     }
 
@@ -265,6 +268,7 @@ class RequirementServiceTest {
         assertEquals(result.getRationale(), request.getRationale());
         assertEquals(result.getSource(), request.getSource());
         assertEquals(result.getRiskIfViolated(), request.getRiskIfViolated());
+        verify(requirementRepository).saveAndFlush(any());
     }
 
     @Test
@@ -337,7 +341,7 @@ class RequirementServiceTest {
 
         // Act / Assert
         when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(false);
-        when(subCategoryRepository.findById(mockRequirement.getSubCategory().getId())).thenThrow(new SubCategoryNotFoundException());
+        when(subCategoryRepository.findById(mockRequirement.getSubCategory().getId())).thenReturn(Optional.empty());
         assertThrows(SubCategoryNotFoundException.class, () -> requirementService.createRequirement(request));
     }
 
@@ -396,12 +400,11 @@ class RequirementServiceTest {
 
         // Act
         when(requirementRepository.findById(mockRequirement.getId())).thenReturn(Optional.of(mockRequirement));
-        //when(subCategoryRepository.findById(mockDto.getSubCategoryId())).thenReturn(Optional.of(subCategory));
-        //when(requirementMapper.toEntityFromUpdateRequirementRequest(any())).thenReturn(mockRequirement);
         when(requirementMapper.toDto(any())).thenReturn(mockDto);
 
         // Assert
         assertNotNull(requirementService.updateRequirement(mockRequirement.getId(), request));
+        verify(requirementRepository).save(any());
     }
 
     @Test
@@ -446,11 +449,13 @@ class RequirementServiceTest {
                 .riskIfViolated("riskIfViolated")
                 .build();
 
-        // Act
         when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
+
+        // Act
         requirementService.deleteRequirement(uuid);
 
         // Assert
+        verify(requirementRepository).deleteById(any());
     }
 
     @Test

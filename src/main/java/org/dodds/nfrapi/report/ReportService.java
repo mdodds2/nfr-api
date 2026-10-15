@@ -21,7 +21,7 @@ public class ReportService {
 
     public List<ReportDto> getAllReports(String sortBy) {
 
-        if (!Set.of("name", "created_at").contains(sortBy))
+        if (!Set.of("name", "createdAt").contains(sortBy))
             sortBy = "name";
 
         List<ReportDto> reportDtos = new ArrayList<>();
@@ -71,7 +71,7 @@ public class ReportService {
 
     public List<ReportDto> getReportsForUser(UUID id, String sortBy) {
 
-        if (!Set.of("name", "created_at").contains(sortBy))
+        if (!Set.of("name", "createdAt").contains(sortBy))
             sortBy = "name";
 
         return reportRepository.findAllByUserId(id, Sort.by(sortBy))

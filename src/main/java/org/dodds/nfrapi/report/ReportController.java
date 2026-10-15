@@ -48,13 +48,14 @@ public class ReportController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteReport(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteReport(@PathVariable UUID id) {
         reportService.deleteReport(id);
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(DuplicateReportException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateRequirementException(DuplicateReportException ex) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new ErrorDto(ex.getMessage()));
+    public ResponseEntity<ErrorDto> handleDuplicateReportException(DuplicateReportException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
     }
 
     @ExceptionHandler(ReportNotFoundException.class)

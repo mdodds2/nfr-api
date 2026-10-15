@@ -62,52 +62,53 @@ public class AuthControllerTest {
 
     @Test
     void shouldLoginBadPassword() throws Exception {
-        var access = mock(Jwt.class);
-        var refresh = mock(Jwt.class);
-
-        when(access.toString()).thenReturn("access-token");
-        when(refresh.toString()).thenReturn("refresh-token");
         when(authService.login(any())).thenThrow(new BadCredentialsException("Bad credentials"));
-        when(jwtConfig.getRefreshTokenExpiration()).thenReturn(604800);
 
         var request = new LoginRequest("mike@test.com", "password");
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(cookie().doesNotExist("refreshToken"));
+        verify(jwtConfig, never()).getRefreshTokenExpiration();
     }
 
     @Test
     void shouldLoginMissingPassword() throws Exception {
-        var access = mock(Jwt.class);
-        var refresh = mock(Jwt.class);
-
-        when(access.toString()).thenReturn("access-token");
-        when(refresh.toString()).thenReturn("refresh-token");
         when(authService.login(any())).thenThrow(new BadCredentialsException("Bad credentials"));
-        when(jwtConfig.getRefreshTokenExpiration()).thenReturn(604800);
 
         var request = new LoginRequest("mike@test.com", null);
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(cookie().doesNotExist("refreshToken"));
         verify(authService, never()).login(any());
     }
 
     @Test
     void shouldReturnRefreshToken() throws Exception {
-        var refresh = mock(Jwt.class);
-        when(refresh.toString()).thenReturn("refresh-token");
+        var token = mock(Jwt.class);
+        when(token.toString()).thenReturn("access-token");
 
-        when(authService.refreshAccessToken("refresh-token")).thenReturn(refresh);
+        when(authService.refreshAccessToken("refresh-token")).thenReturn(token);
 
         mockMvc.perform(post("/auth/refresh")
                         .cookie(new Cookie("refreshToken", "refresh-token")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("refresh-token"));
+                .andExpect(jsonPath("$.token").value("access-token"));
+    }
+
+    @Test
+    void shouldNotReturnRefreshTokenBadToken() throws Exception {
+
+        when(authService.refreshAccessToken("bad-token")).thenThrow(new BadCredentialsException("Invalid refresh token"));
+
+        mockMvc.perform(post("/auth/refresh")
+                        .cookie(new Cookie("refreshToken", "bad-token")))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

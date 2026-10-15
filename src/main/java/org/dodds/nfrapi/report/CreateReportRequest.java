@@ -1,5 +1,9 @@
 package org.dodds.nfrapi.report;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,9 +17,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateReportRequest {
+    @NotNull
     private UUID userId;
+
+    @NotBlank
+    @Size(max=255)
+
     private String name;
     private String description;
     private List<UUID> requirementIds;
+
+    @Valid
     private List<MeasurementDto> measurements;
 }

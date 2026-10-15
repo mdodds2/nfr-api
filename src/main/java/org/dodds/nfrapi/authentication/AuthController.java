@@ -5,9 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.dodds.nfrapi.category.DuplicateSubCategoryException;
 import org.dodds.nfrapi.common.ErrorDto;
-import org.dodds.nfrapi.common.ExcludedGeneratedFromJacoco;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -43,7 +41,6 @@ public class AuthController {
         return new JwtResponse(accessToken.toString());
     }
 
-    @ExcludedGeneratedFromJacoco
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorDto> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorDto(ex.getMessage()));

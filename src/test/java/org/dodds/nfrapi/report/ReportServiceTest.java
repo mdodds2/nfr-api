@@ -167,7 +167,7 @@ class ReportServiceTest {
         assertThat(result.size()).isEqualTo(1);
     }
 
-    @DisplayName("Get report - for user sorted by created_at")
+    @DisplayName("Get report - for user sorted by createdAt")
     @Test
     void getReportForUserSortedByDate() {
         // Arrange
@@ -182,11 +182,11 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
-        when(reportRepository.findAllByUserId(userid, Sort.by("created_at"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(userid, Sort.by("createdAt"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
 
         // Act
-        var result = reportService.getReportsForUser(userid, "created_at");
+        var result = reportService.getReportsForUser(userid, "createdAt");
 
         // Assert
         assertThat(result.size()).isEqualTo(1);
@@ -379,12 +379,12 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("created_at"))).thenReturn(List.of(report));
+        when(reportRepository.findAll(Sort.by("createdAt"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports("created_at");
+        var result = reportService.getAllReports("createdAt");
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);

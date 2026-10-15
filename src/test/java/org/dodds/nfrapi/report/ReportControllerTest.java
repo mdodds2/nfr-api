@@ -89,13 +89,24 @@ public class ReportControllerTest {
                         .description("some description")
                         .build();
 
-        when(reportService.createReport(request)).thenReturn(dto);
+        when(reportService.createReport(any())).thenReturn(dto);
 
         mockMvc.perform((post("/reports")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", endsWith("/reports/" + id)));
+                .andExpect(header().string("Location", endsWith("/reports/" + id)))
+                .andExpect(jsonPath("$.id").value(id.toString()));
+    }
+
+    @Test
+    void shouldNotCreateAReportInvalidRequest() throws Exception {
+        var request = CreateReportRequest.builder().description("no name or user").build();
+        mockMvc.perform(post("/reports")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+        verify(reportService, never()).createReport(any());
     }
 
     @Test
@@ -106,12 +117,12 @@ public class ReportControllerTest {
                 .description("some description")
                 .build();
 
-        when(reportService.createReport(request)).thenThrow(new DuplicateReportException());
+        when(reportService.createReport(any())).thenThrow(new DuplicateReportException());
 
         mockMvc.perform((post("/reports")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isConflict());
     }
 
     @Test
@@ -131,13 +142,13 @@ public class ReportControllerTest {
                 .description("some description changed")
                 .build();
 
-        when(reportService.updateReport(reportId, request)).thenReturn(dto);
+        when(reportService.updateReport(eq(reportId), any())).thenReturn(dto);
 
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(reportId.toString()));;
+                .andExpect(jsonPath("$.id").value(reportId.toString()));
     }
 
     @Test
@@ -151,7 +162,7 @@ public class ReportControllerTest {
 
         var reportId = UUID.randomUUID();
 
-        when(reportService.updateReport(reportId, request)).thenThrow(new ReportNotFoundException());
+        when(reportService.updateReport(eq(reportId), any())).thenThrow(new ReportNotFoundException());
 
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -164,7 +175,7 @@ public class ReportControllerTest {
         var reportId = UUID.randomUUID();
         doNothing().when(reportService).deleteReport(reportId);
         mockMvc.perform(delete("/reports/{id}", reportId))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 
     @Test
