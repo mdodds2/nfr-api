@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:nfr;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: nfr
+    password: nfr4dev
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+logging:
+  level:
+    root: INFO
+    org.hibernate: ERROR
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG

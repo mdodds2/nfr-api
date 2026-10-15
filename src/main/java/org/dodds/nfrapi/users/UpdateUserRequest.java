@@ -1,12 +1,11 @@
 package org.dodds.nfrapi.users;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
+@Data
+@Builder
 @AllArgsConstructor
-@Getter
-@Setter
+@NoArgsConstructor
 public class UpdateUserRequest {
     String name;
     String email;

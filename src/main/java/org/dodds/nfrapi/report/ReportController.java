@@ -40,23 +40,22 @@ public class ReportController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateReport(
+    public ReportDto updateReport(
             @PathVariable(name = "id") UUID id,
             @Valid
             @RequestBody UpdateReportRequest request, UriComponentsBuilder uriBuilder) {
-        var reportDto = reportService.updateReport(id, request);
-        var uri = uriBuilder.path("/reports/{id}").buildAndExpand(reportDto.getId()).toUri();
-        return ResponseEntity.created(uri).body(reportDto);
+        return reportService.updateReport(id, request);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteReport(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteReport(@PathVariable UUID id) {
         reportService.deleteReport(id);
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(DuplicateReportException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateRequirementException(DuplicateReportException ex) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new ErrorDto(ex.getMessage()));
+    public ResponseEntity<ErrorDto> handleDuplicateReportException(DuplicateReportException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
     }
 
     @ExceptionHandler(ReportNotFoundException.class)

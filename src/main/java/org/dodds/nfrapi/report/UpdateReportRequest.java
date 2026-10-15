@@ -1,19 +1,26 @@
 package org.dodds.nfrapi.report;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@Getter
+@Builder
+@Data
 @AllArgsConstructor
-@ToString
+@NoArgsConstructor
 public class UpdateReportRequest {
+    @NotNull
     private UUID userId;
+
+    @NotBlank
     private String name;
     private String description;
     private List<UUID> requirementIds;
+
+    @Valid
     private List<MeasurementDto> measurements;
 }

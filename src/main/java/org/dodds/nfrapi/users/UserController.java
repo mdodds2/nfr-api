@@ -7,10 +7,10 @@ import org.dodds.nfrapi.report.ReportDto;
 import org.dodds.nfrapi.report.ReportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,8 +26,7 @@ public class UserController {
 
     @GetMapping
     public Iterable<UserDto> getAllUsers(
-            @RequestParam(required = false, defaultValue = "", name = "sort") String sortBy
-    ){
+            @RequestParam(required = false, defaultValue = "", name = "sort") String sortBy){
         return userService.getAllUsers(sortBy);
     }
 
@@ -60,8 +59,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/change-password")
@@ -73,7 +73,7 @@ public class UserController {
 
     @ExceptionHandler(DuplicateUserException.class)
     public ResponseEntity<Map<String, String>> handleDuplicateUser() {
-        return ResponseEntity.badRequest().body(
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 Map.of("message", "Email is already registered.")
         );
     }
@@ -85,6 +85,6 @@ public class UserController {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Void> handleAccessDenied() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 }
