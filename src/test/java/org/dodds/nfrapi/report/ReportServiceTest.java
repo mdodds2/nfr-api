@@ -217,6 +217,30 @@ class ReportServiceTest {
         assertThat(result.size()).isEqualTo(1);
     }
 
+    @DisplayName("Get report - for user sorted by null")
+    @Test
+    void getReportForUserSortedByNull() {
+        // Arrange
+        UUID userid = UUID.randomUUID();
+        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
+        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
+        var report = Report.builder()
+                .id(UUID.randomUUID())
+                .name("report")
+                .reportRequirements(List.of(requirement))
+                .measurements(Set.of(measurement))
+                .build();
+        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
+
+        when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
+        when(reportMapper.toDto(report)).thenReturn(reportDto);
+
+        // Act
+        var result = reportService.getReportsForUser(userid, null);
+
+        // Assert
+        assertThat(result).containsExactly(reportDto);
+    }
 
     @DisplayName("Create report with an unknown requirement id")
     @Test
