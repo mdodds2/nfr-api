@@ -51,6 +51,18 @@ class CategoryControllerTest {
     }
 
     @Test
+    void shouldReturn409WhenCategoryIsDuplicate() throws Exception {
+        var id = UUID.randomUUID();
+        var request = CreateCategoryRequest.builder().name("name").build();
+        when(categoryService.createCategory(any())).thenThrow(new DuplicateCategoryException());
+
+        mockMvc.perform(post("/categories", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void shouldReturn409WhenSubCategoryIsDuplicate() throws Exception {
         var id = UUID.randomUUID();
         var request = CreateSubCategoryRequest.builder().name("name").build();
@@ -183,7 +195,7 @@ class CategoryControllerTest {
         var request = UpdateCategoryRequest.builder().name("Performance Updated").build();
         var dto = CategoryDto.builder().id(categoryId).name("Performance Updated").build();
 
-        when(categoryService.updateCategory(categoryId, request)).thenReturn(dto);
+        when(categoryService.updateCategory(eq(categoryId), any(UpdateCategoryRequest.class))).thenReturn(dto);
 
         mockMvc.perform(patch("/categories/{categoryId}", categoryId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -198,7 +210,7 @@ class CategoryControllerTest {
         var request = UpdateCategoryRequest.builder().name("Performance Updated").build();
         var dto = CategoryDto.builder().id(categoryId).name("Performance Updated").build();
 
-        when(categoryService.updateCategory(categoryId, request)).thenThrow(new CategoryNotFoundException());
+        when(categoryService.updateCategory(eq(categoryId), any(UpdateCategoryRequest.class))).thenThrow(new CategoryNotFoundException());
 
         mockMvc.perform(patch("/categories/{categoryId}", categoryId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -213,7 +225,7 @@ class CategoryControllerTest {
         var request = UpdateSubCategoryRequest.builder().name("Performance Updated").build();
         var dto = SubCategoryDto.builder().id(subCategoryId).categoryId(categoryId).name("Performance Updated").build();
 
-        when(categoryService.updateSubCategory(subCategoryId, categoryId, request)).thenReturn(dto);
+        when(categoryService.updateSubCategory(eq(subCategoryId), eq(categoryId), any(UpdateSubCategoryRequest.class))).thenReturn(dto);
 
         mockMvc.perform(patch("/categories/{categoryId}/subcategories/{subCategoryId}", categoryId, subCategoryId)
                         .contentType(MediaType.APPLICATION_JSON)

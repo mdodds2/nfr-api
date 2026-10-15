@@ -20,11 +20,13 @@ public class CreateReportRequest {
     @NotNull
     private UUID userId;
 
-    @NotBlank
+    @NotNull
     @Size(max=255)
-
     private String name;
+
+    @NotBlank
     private String description;
+
     private List<UUID> requirementIds;
 
     @Valid

@@ -103,6 +103,13 @@ public class AuthServiceTest {
     }
 
     @Test
+    void shouldNotRefreshAccessTokenParsedTokenIsNull() {
+        when(jwtService.parseToken("refresh-token")).thenReturn(null);
+        assertThrows(BadCredentialsException.class, () -> authService.refreshAccessToken("refresh-token"));
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
     void shouldNotRefreshAccessTokenGarbageToken() throws Exception {
         when(jwtService.parseToken("refresh-token")).thenReturn(null);
         assertThrows(BadCredentialsException.class, () -> authService.refreshAccessToken("refresh-token"));
@@ -130,6 +137,19 @@ public class AuthServiceTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         assertThat(authService.getCurrentUser()).isSameAs(user);
+    }
+
+    @Test
+    void shouldNotLoginUserNotAuthenticated() throws Exception {
+        var request = LoginRequest.builder().email("mike@test.com").password("default").build();
+        var authentication = mock(Authentication.class);
+
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(false);
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
+
+        assertThrows(BadCredentialsException.class, () -> authService.login(request));
+        verify(userRepository, never()).findById(any());
     }
 
 }

@@ -200,4 +200,48 @@ public class ReportControllerTest {
         verify(reportService).deleteReport(reportId);
     }
 
+    @Test
+    void shouldNotCreateAReportMissingUserId() throws Exception {
+        var request = CreateReportRequest.builder()
+                .name("report1")
+                .description("some description")
+                .build();
+
+        var id = UUID.randomUUID();
+        var dto = ReportDto.builder()
+                .id(id)
+                .name("report1")
+                .description("some description")
+                .build();
+
+        when(reportService.createReport(any(CreateReportRequest.class))).thenReturn(dto);
+
+        mockMvc.perform((post("/reports")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldNotUpdateAReportMissingUserId() throws Exception {
+        var request = UpdateReportRequest.builder()
+                .name("report1")
+                .description("some description")
+                .build();
+
+        var id = UUID.randomUUID();
+        var dto = ReportDto.builder()
+                .id(id)
+                .name("report1")
+                .description("some description")
+                .build();
+
+        when(reportService.updateReport(eq(id), any(UpdateReportRequest.class))).thenReturn(dto);
+
+        mockMvc.perform((put("/reports/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))))
+                .andExpect(status().isBadRequest());
+    }
+
 }
