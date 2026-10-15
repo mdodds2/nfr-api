@@ -40,13 +40,11 @@ public class ReportController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateReport(
+    public ReportDto updateReport(
             @PathVariable(name = "id") UUID id,
             @Valid
             @RequestBody UpdateReportRequest request, UriComponentsBuilder uriBuilder) {
-        var reportDto = reportService.updateReport(id, request);
-        var uri = uriBuilder.path("/reports/{id}").buildAndExpand(reportDto.getId()).toUri();
-        return ResponseEntity.created(uri).body(reportDto);
+        return reportService.updateReport(id, request);
     }
 
     @DeleteMapping("/{id}")
