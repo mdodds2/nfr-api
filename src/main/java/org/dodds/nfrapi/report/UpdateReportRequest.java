@@ -18,10 +18,11 @@ public class UpdateReportRequest {
     private UUID userId;
 
     @NotBlank
-    @Size(max=255)
+    @Size(max=50)
     private String name;
 
     @NotBlank
+    @Size(max=255)
     private String description;
 
     private List<UUID> requirementIds;
