@@ -1,4 +1,4 @@
-CREATE TABLE `nfr`.`ReportsRequirements` (
+CREATE TABLE `nfr`.`reports_requirements` (
   `report_id` BINARY(16) NOT NULL,
   `requirement_id` BINARY(16) NOT NULL,
 
