@@ -1,19 +1,19 @@
 DROP TABLE category;
-CREATE TABLE `nfr`.`category` (
-  `id` BINARY(16) NOT NULL DEFAULT (UUID_TO_BIN(UUID())),
-  `ordinal` INTEGER NOT NULL,
-  `name` VARCHAR(50) NOT NULL,
-  `short_name` VARCHAR(10) NOT NULL,
-  `description` VARCHAR(500) NOT NULL,
-  `sort_order` INTEGER NOT NULL,
-  `is_active` TINYINT NOT NULL DEFAULT 1,
-  `image` VARCHAR(100) NOT NULL,
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `modified_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+CREATE TABLE `category` (
+  `id` binary(16) NOT NULL DEFAULT (uuid_to_bin(uuid())),
+  `ordinal` int NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `short_name` varchar(10) NOT NULL,
+  `description` varchar(500) NOT NULL,
+  `sort_order` int NOT NULL,
+  `is_active` tinyint NOT NULL DEFAULT '1',
+  `image` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE (`name`),
-  UNIQUE (`short_name`)
-);
+  UNIQUE KEY `uq_category_name` (`name`),
+  UNIQUE KEY `uq_category_short_name` (`short_name`)
+)
 
 insert into category (ordinal, name, short_name, description, sort_order) values (1,'Functional Suitability', 'FSU', 'This characteristic represents the degree to which a product or system provides functions that meet stated and implied needs when used under specified conditions.', 1);
 insert into category (ordinal, name, short_name, description, sort_order) values (2,'Performance Efficiency', 'PEF', 'This characteristic represents the degree to which a product performs its functions within specified time and throughput parameters and is efficient in the use of resources (such as CPU, memory, storage, network devices, energy, materials...) under specified conditions.', 2);

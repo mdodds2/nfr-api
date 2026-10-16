@@ -23,3 +23,8 @@ CREATE TABLE NFR.measurements (
     CONSTRAINT fk_measure_report_id  FOREIGN KEY (report_id)  REFERENCES reports(id),
     CONSTRAINT fk_measure_requirement_id  FOREIGN KEY (requirement_id)  REFERENCES requirements(nfr_id)
 );
+
+ALTER TABLE measurements
+  DROP FOREIGN KEY fk_measure_report_id,
+  ADD CONSTRAINT fk_measure_report_id FOREIGN KEY (report_id)
+    REFERENCES reports (id) ON DELETE CASCADE;

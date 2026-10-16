@@ -10,11 +10,10 @@ CREATE TABLE `nfr`.`category_sub` (
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE (`name`),
-  UNIQUE (`short_name`)
+  UNIQUE KEY `uq_category_sub_name` (`category_id`, `name`),
+  UNIQUE KEY `uq_category_sub_short_name` (`category_id`, `short_name`),
+  CONSTRAINT `fk_category_sub_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`)
 );
-
-ALTER TABLE category_sub ADD CONSTRAINT fk_category_id FOREIGN KEY (category_id) REFERENCES category(id);
 
 -- Functional Suitability
 INSERT INTO category_sub (category_id, name, short_name, description, sort_order) values ((select id from category where ordinal=1), 'Functional Completeness', 'FCO', 'Degree to which the set of functions covers all the specified tasks and intended users'' objectives.', 1);
