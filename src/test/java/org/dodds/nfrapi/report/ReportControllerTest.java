@@ -271,7 +271,9 @@ public class ReportControllerTest {
         mockMvc.perform((post("/reports")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("description: must not be blank"));
+
         verify(reportService, never()).createReport(any());
     }
 

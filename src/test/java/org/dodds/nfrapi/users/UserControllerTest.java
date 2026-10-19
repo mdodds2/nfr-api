@@ -10,17 +10,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -116,7 +118,7 @@ class UserControllerTest {
     @Test
     void shouldCreateAUser() throws Exception {
         var userId = UUID.randomUUID();
-        var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED").build();
+        var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED1").build();
         var userDto = UserDto.builder().id(userId).name("Test User").email("user@example.com").build();
 
         when(userService.registerUser(any())).thenReturn(userDto);
@@ -134,7 +136,7 @@ class UserControllerTest {
     @Test
     void shouldNotCreateAUserDuplicateEmail() throws Exception {
         var userId = UUID.randomUUID();
-        var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED").build();
+        var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED1").build();
         var userDto = UserDto.builder().id(userId).name("Test User").email("user@example.com").build();
 
         when(userService.registerUser(any())).thenThrow(new DuplicateUserException());
@@ -210,33 +212,86 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldChangePassword() throws Exception {
+    void shouldChangeLoggedInUserPassword() throws Exception {
         var id = UUID.randomUUID();
-        var request = ChangePasswordRequest.builder().oldPassword("OLD").newPassword("NEW").build();
+        var auth = new UsernamePasswordAuthenticationToken(
+                id,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
-        doNothing().when(userService).changePassword(id, request);
+        var request = ChangePasswordRequest.builder().oldPassword("OLDPASSWORD").newPassword("NEWPASSWORD").build();
 
-        mockMvc.perform(post("/users/{id}/change-password", id)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        try {
+            mockMvc.perform(post("/users/me/change-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNoContent());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
 
         verify(userService).changePassword(eq(id), any());
     }
 
     @Test
-    void shouldNotChangePasswordBadPassword() throws Exception {
+    void shouldNotChangeLoggedInUserNotFound() throws Exception {
         var id = UUID.randomUUID();
-        var request = ChangePasswordRequest.builder().oldPassword("BAD").newPassword("NEW").build();
+        var auth = new UsernamePasswordAuthenticationToken(
+                id,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
-        doThrow(AccessDeniedException.class).when(userService).changePassword(id, request);
+        var request = ChangePasswordRequest.builder().oldPassword("OLDPASSWORD").newPassword("NEWPASSWORD").build();
 
-        mockMvc.perform(post("/users/{id}/change-password", id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+        doThrow(UserNotFoundException.class).when(userService).changePassword(eq(id), any());
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        try {
+            mockMvc.perform(post("/users/me/change-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isNotFound());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    void shouldNotChangeLoggedInUserForbidden() throws Exception {
+        var id = UUID.randomUUID();
+        var auth = new UsernamePasswordAuthenticationToken(
+                id,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+
+        var request = ChangePasswordRequest.builder().oldPassword("OLDPASSWORD").newPassword("NEWPASSWORD").build();
+
+        doThrow(AccessDeniedException.class).when(userService).changePassword(eq(id), any());
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        try {
+            mockMvc.perform(post("/users/me/change-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
 
         verify(userService).changePassword(eq(id), any());
+    }
+
+    @Test
+    void shouldNotChangeLoggedInUserBadRequest() throws Exception {
+        var id = UUID.randomUUID();
+
+        var request = ChangePasswordRequest.builder().oldPassword("OLDPASSWORD").newPassword("NEW").build();
+
+        mockMvc.perform(post("/users/me/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
 }
