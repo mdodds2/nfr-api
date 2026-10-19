@@ -257,7 +257,7 @@ class UserControllerTest {
             mockMvc.perform(post("/users/me/change-password")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isNoContent());
         } finally {
             SecurityContextHolder.clearContext();
         }

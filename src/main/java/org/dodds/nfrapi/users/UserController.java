@@ -61,18 +61,12 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-/*
-    @PostMapping("/{id}/change-password")
-    public void changePasswordWhenNotLoggedIn(
-            @PathVariable(name = "id") UUID id,
-            @RequestBody ChangePasswordRequest request) {
-        userService.changePassword(id, request);
-    }
-*/
+
     @PostMapping("/me/change-password")
-    public void changePasswordWhenLoggedIn(
+    public ResponseEntity<?> changePasswordWhenLoggedIn(
             @Valid @RequestBody ChangePasswordRequest request, @AuthenticationPrincipal UUID userId) {
         userService.changePassword(userId, request);
+        return ResponseEntity.noContent().build();
     }
 
 }
