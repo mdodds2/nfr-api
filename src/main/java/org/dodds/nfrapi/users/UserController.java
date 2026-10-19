@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import org.dodds.nfrapi.report.ReportDto;
 import org.dodds.nfrapi.report.ReportService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -60,12 +61,18 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-
+/*
     @PostMapping("/{id}/change-password")
-    public void changePassword(
+    public void changePasswordWhenNotLoggedIn(
             @PathVariable(name = "id") UUID id,
             @RequestBody ChangePasswordRequest request) {
         userService.changePassword(id, request);
+    }
+*/
+    @PostMapping("/me/change-password")
+    public void changePasswordWhenLoggedIn(
+            @Valid @RequestBody ChangePasswordRequest request, @AuthenticationPrincipal UUID userId) {
+        userService.changePassword(userId, request);
     }
 
 }

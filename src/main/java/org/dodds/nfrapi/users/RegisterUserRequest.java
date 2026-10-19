@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class RegisterUserRequest {
 
     @NotBlank(message = "Name is required")
-    @Size(max = 255, message="Name must be less than 255 characters")
+    @Size(min=5, max = 255, message="Name must be a minimum of 5 and a maximum of 255 characters")
     private String name;
 
     @NotBlank
@@ -23,6 +23,6 @@ public class RegisterUserRequest {
     private String email;
 
     @NotBlank
-    @Size(min = 6, max = 25, message = "Password must be between 6 to 25 characters long")
+    @Size(min=8, max=72, message = "Password must be between 8 to 72 characters long")
     private String password;
 }
