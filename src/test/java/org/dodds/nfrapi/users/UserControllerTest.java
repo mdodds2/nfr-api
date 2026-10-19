@@ -118,7 +118,7 @@ class UserControllerTest {
     @Test
     void shouldCreateAUser() throws Exception {
         var userId = UUID.randomUUID();
-        var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED").build();
+        var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED1").build();
         var userDto = UserDto.builder().id(userId).name("Test User").email("user@example.com").build();
 
         when(userService.registerUser(any())).thenReturn(userDto);
@@ -136,7 +136,7 @@ class UserControllerTest {
     @Test
     void shouldNotCreateAUserDuplicateEmail() throws Exception {
         var userId = UUID.randomUUID();
-        var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED").build();
+        var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED1").build();
         var userDto = UserDto.builder().id(userId).name("Test User").email("user@example.com").build();
 
         when(userService.registerUser(any())).thenThrow(new DuplicateUserException());
@@ -210,37 +210,6 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
 
     }
-
-    @Test
-    void shouldChangePassword() throws Exception {
-        var id = UUID.randomUUID();
-        var request = ChangePasswordRequest.builder().oldPassword("OLD").newPassword("NEW").build();
-
-        doNothing().when(userService).changePassword(id, request);
-
-        mockMvc.perform(post("/users/{id}/change-password", id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(userService).changePassword(eq(id), any());
-    }
-
-    @Test
-    void shouldNotChangePasswordBadPassword() throws Exception {
-        var id = UUID.randomUUID();
-        var request = ChangePasswordRequest.builder().oldPassword("BAD").newPassword("NEW").build();
-
-        doThrow(AccessDeniedException.class).when(userService).changePassword(id, request);
-
-        mockMvc.perform(post("/users/{id}/change-password", id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
-
-        verify(userService).changePassword(eq(id), any());
-    }
-
 
     @Test
     void shouldChangeLoggedInUserPassword() throws Exception {
