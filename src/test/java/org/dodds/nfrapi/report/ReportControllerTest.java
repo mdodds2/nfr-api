@@ -2,6 +2,7 @@ package org.dodds.nfrapi.report;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dodds.nfrapi.authentication.JwtService;
+import org.dodds.nfrapi.users.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -127,7 +128,6 @@ public class ReportControllerTest {
     void shouldUpdateAReport() throws Exception {
         var userId = UUID.randomUUID();
         var request = UpdateReportRequest.builder()
-                .userId(userId)
                 .name("report1")
                 .description("some description changed")
                 .build();
@@ -151,9 +151,7 @@ public class ReportControllerTest {
 
     @Test
     void shouldNotUpdateAReportNotFound() throws Exception {
-        var userId = UUID.randomUUID();
         var request = UpdateReportRequest.builder()
-                .userId(userId)
                 .name("report1")
                 .description("some description changed")
                 .build();
@@ -213,23 +211,8 @@ public class ReportControllerTest {
     }
 
     @Test
-    void shouldNotUpdateAReportMissingUserId() throws Exception {
-        var request = UpdateReportRequest.builder()
-                .name("report1")
-                .description("some description")
-                .build();
-
-        mockMvc.perform((put("/reports/{id}", UUID.randomUUID())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))))
-                .andExpect(status().isBadRequest());
-        verify(reportService, never()).updateReport(any(), any());
-    }
-
-    @Test
     void shouldNotUpdateAReportBlankName() throws Exception {
         var request = UpdateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("")
                 .description("some description")
                 .build();
@@ -262,7 +245,6 @@ public class ReportControllerTest {
     @Test
     void shouldNotUpdateAReportBlankDescription() throws Exception {
         var request = UpdateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("report1")
                 .description("")
                 .build();

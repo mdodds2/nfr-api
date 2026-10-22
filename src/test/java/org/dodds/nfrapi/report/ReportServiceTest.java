@@ -346,7 +346,6 @@ class ReportServiceTest {
 
         Report report = Report.builder().id(reportId).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
         UpdateReportRequest request = UpdateReportRequest.builder()
-                .userId(userId)
                 .name("report name")
                 .description("reportDescription")
                 .requirementIds(List.of(requirementId))
@@ -372,7 +371,7 @@ class ReportServiceTest {
         ReportDto result = reportService.updateReport(reportId, request);
 
         // Assert
-        assertEquals(request.getUserId(), result.getUserId());
+        assertEquals(userId, result.getUserId());
         verify(reportMapper).update(request, report);
         verify(reportRepository).save(report);
     }
@@ -383,12 +382,12 @@ class ReportServiceTest {
         // Arrange
         UUID uuid = UUID.randomUUID();
         Report report = Report.builder().id(uuid).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
-        UpdateReportRequest request = new UpdateReportRequest(
-                uuid,
-                "report name",
-                "reportDescription",
-                List.of(),
-                List.of());
+        UpdateReportRequest request = UpdateReportRequest.builder()
+                .name("report name")
+                .description("reportDescription")
+                .requirementIds(List.of())
+                .measurements(List.of())
+                .build();
 
         when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
 
