@@ -22,13 +22,15 @@ public class ReportService {
     private final RequirementMapper requirementMapper;
     private final UserRepository userRepository;
 
-    public List<ReportDto> getAllReports(String sortBy) {
+    public List<ReportDto> getAllReports(UUID userId, String sortBy) {
 
         if (sortBy == null || !Set.of("name", "createdAt").contains(sortBy))
             sortBy = "name";
 
+        List<Report> reports = reportRepository.findAllByUserId(userId, Sort.by(sortBy));
+
         List<ReportDto> reportDtos = new ArrayList<>();
-        List<Report> reports = reportRepository.findAll(Sort.by(sortBy));
+
         reports.forEach( report -> {
             ReportDto dto = reportMapper.toDto(report);
 

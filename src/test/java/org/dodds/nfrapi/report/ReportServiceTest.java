@@ -433,12 +433,12 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(any(), eq(Sort.by("name")))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports("name");
+        var result = reportService.getAllReports(UUID.randomUUID(), "name");
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
@@ -459,12 +459,12 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("createdAt"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(any(), eq(Sort.by("createdAt")))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports("createdAt");
+        var result = reportService.getAllReports(UUID.randomUUID(), "createdAt");
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
@@ -485,12 +485,12 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(any(), eq(Sort.by("name")))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports("other");
+        var result = reportService.getAllReports(UUID.randomUUID(), "other");
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
@@ -511,12 +511,12 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(any(), eq(Sort.by("name")))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports(null);
+        var result = reportService.getAllReports(UUID.randomUUID(), null);
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);

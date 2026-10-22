@@ -55,7 +55,7 @@ public class ReportControllerTest {
         var report2 = ReportDto.builder().id(UUID.randomUUID()).name("Report 2").build();
         var report3 = ReportDto.builder().id(UUID.randomUUID()).name("Report 3").build();
 
-        when(reportService.getAllReports("")).thenReturn(List.of(report1, report2, report3));
+        when(reportService.getAllReports(any(),eq(""))).thenReturn(List.of(report1, report2, report3));
 
         mockMvc.perform(get("/reports"))
                 .andExpect(status().isOk())

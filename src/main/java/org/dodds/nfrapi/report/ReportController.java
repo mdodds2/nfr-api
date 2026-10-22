@@ -20,8 +20,9 @@ public class ReportController {
 
     @GetMapping
     public Iterable<ReportDto> getAllReports(
+            @AuthenticationPrincipal UUID userId,
             @RequestParam(required = false, defaultValue = "", name = "sort") String sortBy ){
-        return reportService.getAllReports(sortBy);
+        return reportService.getAllReports(userId, sortBy);
     }
 
     @GetMapping("/{id}")
