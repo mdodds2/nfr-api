@@ -55,10 +55,10 @@ public class ReportService {
         var report = reportRepository.findById(id).orElseThrow(ReportNotFoundException::new);
         var reportDto = toDtoWithOwner(report);
 
-        var requirementDtos = new ArrayList<RequirementDto>();
-        report.getReportRequirements().forEach( requirement -> {
-            requirementDtos.add(requirementMapper.toDto(requirement));
-        });
+        var requirementDtos = report.getReportRequirements().stream()
+                .map(requirementMapper::toDto)
+                .toList();
+
         reportDto.setRequirements(requirementDtos);
 
         var measurementDtos = new ArrayList<MeasurementDto>();
