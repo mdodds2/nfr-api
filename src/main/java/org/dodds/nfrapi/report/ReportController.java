@@ -42,7 +42,7 @@ public class ReportController {
     public ReportDto updateReport(
             @PathVariable(name = "id") UUID id,
             @Valid
-            @RequestBody UpdateReportRequest request, UriComponentsBuilder uriBuilder) {
+            @RequestBody UpdateReportRequest request) {
         return reportService.updateReport(id, request);
     }
 
