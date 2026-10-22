@@ -85,8 +85,8 @@ class ReportServiceTest {
 
         // Assert
         assertEquals(request.getName(), result.getName());
+        assertEquals(userId, result.getUserId());
         verify(reportRepository).save(report);
-
     }
 
     @DisplayName("shouldThrowDuplicateReportWhenNameExistsForUser")

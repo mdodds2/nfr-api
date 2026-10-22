@@ -92,6 +92,8 @@ public class ReportService {
         }
         var report = reportMapper.toEntity(request);
 
+        report.setUserId(userId);
+
         List<Requirement> requirementList = new ArrayList<>();
         request.getRequirementIds().forEach((id) -> {
             Requirement req = requirementRepository.findById(id).orElseThrow(RequirementNotFoundException::new);
