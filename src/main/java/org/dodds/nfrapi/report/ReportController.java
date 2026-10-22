@@ -33,7 +33,7 @@ public class ReportController {
     public ResponseEntity<?> createReport(
             @Valid
             @RequestBody CreateReportRequest request, @AuthenticationPrincipal UUID userId, UriComponentsBuilder uriBuilder) {
-        var reportDto = reportService.createReport(request, userId);
+        var reportDto = reportService.createReport(userId, request);
         var uri = uriBuilder.path("/reports/{id}").buildAndExpand(reportDto.getId()).toUri();
         return ResponseEntity.created(uri).body(reportDto);
     }

@@ -5,7 +5,6 @@ import org.dodds.nfrapi.requirement.*;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,7 +86,7 @@ public class ReportService {
     }
 
     @Transactional
-    public ReportDto createReport(CreateReportRequest request, @AuthenticationPrincipal UUID userId) {
+    public ReportDto createReport(UUID userId, CreateReportRequest request) {
         if(reportRepository.existsByUserIdAndName(userId, request.getName())) {
             throw new DuplicateReportException();
         }

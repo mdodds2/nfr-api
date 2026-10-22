@@ -57,7 +57,6 @@ class ReportServiceTest {
         var measurementsDto = List.of(measurementDto);
 
         CreateReportRequest request = CreateReportRequest.builder()
-                .userId(userId)
                 .name("project name")
                 .description("project description")
                 .requirementIds(List.of(requirementId))
@@ -82,7 +81,7 @@ class ReportServiceTest {
         when(measurementMapper.toEntity(measurementDto)).thenReturn(measurement);
 
         // Act
-        ReportDto result = reportService.createReport(request, userId);
+        ReportDto result = reportService.createReport(userId, request);
 
         // Assert
         assertEquals(request.getName(), result.getName());
@@ -96,19 +95,19 @@ class ReportServiceTest {
 
         UUID userId = UUID.randomUUID();
         // Arrange
-        CreateReportRequest request = new CreateReportRequest(
-                userId,
-                "project name",
-                "project description",
-                List.of(),
-                List.of());
+        CreateReportRequest request = CreateReportRequest.builder()
+                .name("project name")
+                .description("project description")
+                .requirementIds(List.of())
+                .measurements(List.of())
+                .build();
 
-        when(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())).thenReturn(true);
+        when(reportRepository.existsByUserIdAndName(any(), any())).thenReturn(true);
 
         // Act
 
         // Assert
-        assertThrows(DuplicateReportException.class, () -> reportService.createReport(request, userId));
+        assertThrows(DuplicateReportException.class, () -> reportService.createReport(userId, request));
         verify(reportRepository, never()).save(any());
     }
 
@@ -283,20 +282,21 @@ class ReportServiceTest {
         // Arrange
         UUID userId = UUID.randomUUID();
         UUID unknownReqtId = UUID.randomUUID();
-        CreateReportRequest request = new CreateReportRequest(
-                userId,
-                "project name",
-                "project description",
-                List.of(unknownReqtId),
-                List.of());
+        CreateReportRequest request = CreateReportRequest.builder()
+                .name("project name")
+                .description("project description")
+                .requirementIds(List.of(unknownReqtId))
+                .measurements(List.of())
+                .build();
+
         Report report = Report.builder().name(request.getName()).build();
 
-        when(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())).thenReturn(false);
+        when(reportRepository.existsByUserIdAndName(any(), any())).thenReturn(false);
         when(reportMapper.toEntity(request)).thenReturn(report);
         when(requirementRepository.findById(unknownReqtId)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(request, userId));
+        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(userId, request));
         verify(reportRepository, never()).save(any());
     }
 

@@ -17,8 +17,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateReportRequest {
-    @NotNull
-    private UUID userId;
 
     @NotBlank
     @Size(max=50)

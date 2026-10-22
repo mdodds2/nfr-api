@@ -77,7 +77,6 @@ public class ReportControllerTest {
     @Test
     void shouldCreateAReport() throws Exception {
         var request = CreateReportRequest.builder()
-                        .userId(UUID.randomUUID())
                         .name("report1")
                         .description("some description")
                         .build();
@@ -112,7 +111,6 @@ public class ReportControllerTest {
     @Test
     void shouldNotCreateAReportDuplicate() throws Exception {
         var request = CreateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("report1")
                 .description("some description")
                 .build();
@@ -201,23 +199,8 @@ public class ReportControllerTest {
     }
 
     @Test
-    void shouldNotCreateAReportMissingUserId() throws Exception {
-        var request = CreateReportRequest.builder()
-                .name("report1")
-                .description("some description")
-                .build();
-
-        mockMvc.perform((post("/reports")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))))
-                .andExpect(status().isBadRequest());
-        verify(reportService, never()).createReport(any(), any());
-    }
-
-    @Test
     void shouldNotCreateAReportBlankName() throws Exception {
         var request = CreateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("")
                 .description("some description")
                 .build();
@@ -263,7 +246,6 @@ public class ReportControllerTest {
     @Test
     void shouldNotCreateAReportBlankDescription() throws Exception {
         var request = CreateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("report1")
                 .description("")
                 .build();
