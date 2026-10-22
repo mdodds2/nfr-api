@@ -40,9 +40,10 @@ public class ReportController {
 
     @PutMapping("/{id}")
     public ReportDto updateReport(
+            @PathVariable UUID id,
             @Valid @RequestBody UpdateReportRequest request,
             @AuthenticationPrincipal UUID userId) {
-        return reportService.updateReport(userId, request);
+        return reportService.updateReport(id, userId, request);
     }
 
     @DeleteMapping("/{id}")

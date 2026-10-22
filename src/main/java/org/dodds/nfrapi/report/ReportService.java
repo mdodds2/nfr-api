@@ -3,6 +3,7 @@ package org.dodds.nfrapi.report;
 import lombok.AllArgsConstructor;
 import org.dodds.nfrapi.requirement.*;
 import org.dodds.nfrapi.users.User;
+import org.dodds.nfrapi.users.UserNotFoundException;
 import org.dodds.nfrapi.users.UserRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -122,7 +123,8 @@ public class ReportService {
         return reportDto;
     }
 
-    public ReportDto updateReport(UUID reportId, UpdateReportRequest request) {
+    public ReportDto updateReport(UUID reportId, UUID userId, UpdateReportRequest request) {
+        userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         var report = reportRepository.findById(reportId).orElseThrow(ReportNotFoundException::new);
         reportMapper.update(request, report);
 

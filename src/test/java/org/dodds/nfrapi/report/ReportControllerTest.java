@@ -140,7 +140,7 @@ public class ReportControllerTest {
                 .description("some description changed")
                 .build();
 
-        when(reportService.updateReport(eq(reportId), any())).thenReturn(dto);
+        when(reportService.updateReport(eq(reportId), any(), any())).thenReturn(dto);
 
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -158,7 +158,7 @@ public class ReportControllerTest {
 
         var reportId = UUID.randomUUID();
 
-        when(reportService.updateReport(eq(reportId), any())).thenThrow(new ReportNotFoundException());
+        when(reportService.updateReport(eq(reportId), any(), any())).thenThrow(new ReportNotFoundException());
 
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -168,14 +168,14 @@ public class ReportControllerTest {
 
     @Test
     void shouldNotUpdateAReportBadRequest() throws Exception {
-        var request = UpdateReportRequest.builder().build();
         var reportId = UUID.randomUUID();
+        var request = UpdateReportRequest.builder().build();
 
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).updateReport(any(), any());
+        verify(reportService, never()).updateReport(any(), any(), any());
     }
 
     @Test
@@ -223,7 +223,7 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).updateReport(any(), any());
+        verify(reportService, never()).updateReport(any(), any(), any());
     }
 
     @Test
@@ -255,7 +255,7 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).updateReport(any(), any());
+        verify(reportService, never()).updateReport(any(), any(), any());
     }
 
 }

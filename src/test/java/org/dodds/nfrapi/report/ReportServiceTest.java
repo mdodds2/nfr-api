@@ -362,13 +362,19 @@ class ReportServiceTest {
                 .measurements(measurementsDto)
                 .build();
 
+        var user = User.builder()
+                .id(UUID.randomUUID())
+                .name("Test User")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
         when(requirementRepository.findById(requirementId)).thenReturn(Optional.of(requirement));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(measurementMapper.toEntity(measurementDto)).thenReturn(measurement);
 
         // Act
-        ReportDto result = reportService.updateReport(reportId, request);
+        ReportDto result = reportService.updateReport(reportId, userId, request);
 
         // Assert
         assertEquals(userId, result.getUserId());
@@ -380,21 +386,28 @@ class ReportServiceTest {
     @Test
     void shouldNotUpdateReportNotFound() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        Report report = Report.builder().id(uuid).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
-        UpdateReportRequest request = UpdateReportRequest.builder()
+        var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
+        var report = Report.builder().id(reportId).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
+        var request = UpdateReportRequest.builder()
                 .name("report name")
                 .description("reportDescription")
                 .requirementIds(List.of())
                 .measurements(List.of())
                 .build();
 
-        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
+        var user = User.builder()
+                .id(userId)
+                .name("test user")
+                .build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
         // Act
 
         // Assert
-        assertThrows(ReportNotFoundException.class, () -> reportService.updateReport(uuid, request));
+        assertThrows(ReportNotFoundException.class, () -> reportService.updateReport(reportId, userId, request));
         verify(reportRepository, never()).save(report);
     }
 
