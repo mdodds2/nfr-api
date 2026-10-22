@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -31,8 +32,8 @@ public class ReportController {
     @PostMapping
     public ResponseEntity<?> createReport(
             @Valid
-            @RequestBody CreateReportRequest request, UriComponentsBuilder uriBuilder) {
-        var reportDto = reportService.createReport(request);
+            @RequestBody CreateReportRequest request, @AuthenticationPrincipal UUID userId, UriComponentsBuilder uriBuilder) {
+        var reportDto = reportService.createReport(request, userId);
         var uri = uriBuilder.path("/reports/{id}").buildAndExpand(reportDto.getId()).toUri();
         return ResponseEntity.created(uri).body(reportDto);
     }

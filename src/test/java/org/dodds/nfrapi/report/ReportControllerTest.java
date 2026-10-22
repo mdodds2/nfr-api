@@ -89,7 +89,7 @@ public class ReportControllerTest {
                         .description("some description")
                         .build();
 
-        when(reportService.createReport(any())).thenReturn(dto);
+        when(reportService.createReport(any(), any())).thenReturn(dto);
 
         mockMvc.perform((post("/reports")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -106,7 +106,7 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).createReport(any());
+        verify(reportService, never()).createReport(any(), any());
     }
 
     @Test
@@ -117,7 +117,7 @@ public class ReportControllerTest {
                 .description("some description")
                 .build();
 
-        when(reportService.createReport(any())).thenThrow(new DuplicateReportException());
+        when(reportService.createReport(any(),any())).thenThrow(new DuplicateReportException());
 
         mockMvc.perform((post("/reports")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -211,7 +211,7 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).createReport(any());
+        verify(reportService, never()).createReport(any(), any());
     }
 
     @Test
@@ -226,7 +226,7 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).createReport(any());
+        verify(reportService, never()).createReport(any(), any());
     }
 
     @Test
@@ -274,7 +274,7 @@ public class ReportControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("description: must not be blank"));
 
-        verify(reportService, never()).createReport(any());
+        verify(reportService, never()).createReport(any(), any());
     }
 
     @Test

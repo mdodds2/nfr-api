@@ -2,12 +2,14 @@ package org.dodds.nfrapi.report;
 
 import lombok.AllArgsConstructor;
 import org.dodds.nfrapi.requirement.*;
+import org.dodds.nfrapi.users.User;
+import org.dodds.nfrapi.users.UserRepository;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-
 
 @AllArgsConstructor
 @Service
@@ -18,6 +20,7 @@ public class ReportService {
     private final MeasurementMapper measurementMapper;
     private final RequirementRepository requirementRepository;
     private final RequirementMapper requirementMapper;
+    private final UserRepository userRepository;
 
     public List<ReportDto> getAllReports(String sortBy) {
 
@@ -51,10 +54,9 @@ public class ReportService {
 
     public ReportDto getReport(UUID id) {
         var report = reportRepository.findById(id).orElseThrow(ReportNotFoundException::new);
-        var reportDto = reportMapper.toDto(report);
+        var reportDto = toDtoWithOwner(report);
 
         var requirementDtos = new ArrayList<RequirementDto>();
-        //for(Requirement requirement : report.getReportRequirements()) {
         report.getReportRequirements().forEach( requirement -> {
             requirementDtos.add(requirementMapper.toDto(requirement));
         });
@@ -74,15 +76,19 @@ public class ReportService {
         if (sortBy == null || !Set.of("name", "createdAt").contains(sortBy))
             sortBy = "name";
 
+        String userName = userRepository.findById(id)
+                .map(User::getName)
+                .orElse(null);
+
         return reportRepository.findAllByUserId(id, Sort.by(sortBy))
                 .stream()
-                .map(reportMapper::toDto)
+                .map(r -> { var dto = reportMapper.toDto(r); dto.setUserName(userName); return dto; })
                 .toList();
     }
 
     @Transactional
-    public ReportDto createReport(CreateReportRequest request) {
-        if(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())) {
+    public ReportDto createReport(CreateReportRequest request, @AuthenticationPrincipal UUID userId) {
+        if(reportRepository.existsByUserIdAndName(userId, request.getName())) {
             throw new DuplicateReportException();
         }
         var report = reportMapper.toEntity(request);
@@ -141,6 +147,13 @@ public class ReportService {
     public void deleteReport(UUID id) {
         var report = reportRepository.findById(id).orElseThrow(ReportNotFoundException::new);
         reportRepository.delete(report);
+    }
+
+    private ReportDto toDtoWithOwner(Report report) {
+        ReportDto dto = reportMapper.toDto(report);
+        userRepository.findById(report.getUserId())
+                .ifPresent(u -> dto.setUserName(u.getName()));
+        return dto;
     }
 
 }

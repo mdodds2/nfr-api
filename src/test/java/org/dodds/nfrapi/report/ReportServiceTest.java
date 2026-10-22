@@ -76,7 +76,7 @@ class ReportServiceTest {
         when(measurementMapper.toEntity(measurementDto)).thenReturn(measurement);
 
         // Act
-        ReportDto result = reportService.createReport(request);
+        ReportDto result = reportService.createReport(request, eq(UUID.randomUUID()));
 
         // Assert
         assertEquals(request.getName(), result.getName());
@@ -88,9 +88,10 @@ class ReportServiceTest {
     @Test
     void shouldThrowDuplicateReportWhenNameExistsForUser() {
 
+        UUID userId = UUID.randomUUID();
         // Arrange
         CreateReportRequest request = new CreateReportRequest(
-                UUID.randomUUID(),
+                userId,
                 "project name",
                 "project description",
                 List.of(),
@@ -101,7 +102,7 @@ class ReportServiceTest {
         // Act
 
         // Assert
-        assertThrows(DuplicateReportException.class, () -> reportService.createReport(request));
+        assertThrows(DuplicateReportException.class, () -> reportService.createReport(request, eq(userId)));
         verify(reportRepository, never()).save(any());
     }
 
@@ -246,21 +247,22 @@ class ReportServiceTest {
     @Test
     void createReportWithAnUnknownRequirementId() {
         // Arrange
-        UUID unknownId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID unknownReqtId = UUID.randomUUID();
         CreateReportRequest request = new CreateReportRequest(
-                UUID.randomUUID(),
+                userId,
                 "project name",
                 "project description",
-                List.of(unknownId),
+                List.of(unknownReqtId),
                 List.of());
         Report report = Report.builder().name(request.getName()).build();
 
         when(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())).thenReturn(false);
         when(reportMapper.toEntity(request)).thenReturn(report);
-        when(requirementRepository.findById(unknownId)).thenReturn(Optional.empty());
+        when(requirementRepository.findById(unknownReqtId)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(request));
+        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(request, eq(userId)));
         verify(reportRepository, never()).save(any());
     }
 
