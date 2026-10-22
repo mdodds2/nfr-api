@@ -1,6 +1,8 @@
 package org.dodds.nfrapi.report;
 
 import org.dodds.nfrapi.requirement.*;
+import org.dodds.nfrapi.users.User;
+import org.dodds.nfrapi.users.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,9 @@ class ReportServiceTest {
     ReportRepository reportRepository;
 
     @Mock
+    UserRepository userRepository;
+
+    @Mock
     RequirementRepository requirementRepository;
 
     @Mock
@@ -42,6 +47,7 @@ class ReportServiceTest {
     void shouldCreateAReport() {
 
         // Arrange
+        var userId = UUID.randomUUID();
         var requirementId = UUID.randomUUID();
         var requirement = Requirement.builder().id(requirementId).title("Requirement 1").build();
         var requirementsDto = List.of(RequirementDto.builder().id(requirementId).title("Title 1").build());
@@ -51,7 +57,7 @@ class ReportServiceTest {
         var measurementsDto = List.of(measurementDto);
 
         CreateReportRequest request = CreateReportRequest.builder()
-                .userId(UUID.randomUUID())
+                .userId(userId)
                 .name("project name")
                 .description("project description")
                 .requirementIds(List.of(requirementId))
@@ -62,21 +68,21 @@ class ReportServiceTest {
 
         ReportDto dto = ReportDto.builder().
                 id(UUID.randomUUID()).
-                userId(request.getUserId()).
+                userId(userId).
                 name(request.getName()).
                 description(request.getDescription()).
                 active(true).
                 requirements(requirementsDto).
                 measurements(measurementsDto).build();
 
-        when(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())).thenReturn(false);
+        when(reportRepository.existsByUserIdAndName(userId, request.getName())).thenReturn(false);
         when(requirementRepository.findById(requirementId)).thenReturn(Optional.of(requirement));
         when(reportMapper.toEntity(request)).thenReturn(report);
         when(reportMapper.toDto(report)).thenReturn(dto);
         when(measurementMapper.toEntity(measurementDto)).thenReturn(measurement);
 
         // Act
-        ReportDto result = reportService.createReport(request, eq(UUID.randomUUID()));
+        ReportDto result = reportService.createReport(request, userId);
 
         // Assert
         assertEquals(request.getName(), result.getName());
@@ -102,7 +108,7 @@ class ReportServiceTest {
         // Act
 
         // Assert
-        assertThrows(DuplicateReportException.class, () -> reportService.createReport(request, eq(userId)));
+        assertThrows(DuplicateReportException.class, () -> reportService.createReport(request, userId));
         verify(reportRepository, never()).save(any());
     }
 
@@ -158,14 +164,21 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
+        var user = User.builder()
+                 .id(UUID.randomUUID())
+                 .name("Test User")
+                 .build();
+
         when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
 
         // Act
         var result = reportService.getReportsForUser(userid, "name");
 
         // Assert
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result).containsExactly(reportDto);
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());;
     }
 
     @DisplayName("Get report - for user sorted by createdAt")
@@ -183,14 +196,21 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
+        var user = User.builder()
+                .id(UUID.randomUUID())
+                .name("Test User")
+                .build();
+
         when(reportRepository.findAllByUserId(userid, Sort.by("createdAt"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
 
         // Act
         var result = reportService.getReportsForUser(userid, "createdAt");
 
         // Assert
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result).containsExactly(reportDto);
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());;
     }
 
     @DisplayName("Get report - for user sorted by other")
@@ -208,14 +228,21 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
+        var user = User.builder()
+                .id(UUID.randomUUID())
+                .name("Test User")
+                .build();
+
         when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
 
         // Act
         var result = reportService.getReportsForUser(userid, "other");
 
         // Assert
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result).containsExactly(reportDto);
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());;
     }
 
     @DisplayName("Get report - for user sorted by null")
@@ -233,14 +260,21 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
+        var user = User.builder()
+                .id(UUID.randomUUID())
+                .name("Test User")
+                .build();
+
         when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
 
         // Act
         var result = reportService.getReportsForUser(userid, null);
 
         // Assert
         assertThat(result).containsExactly(reportDto);
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());;
     }
 
     @DisplayName("Create report with an unknown requirement id")
@@ -262,7 +296,7 @@ class ReportServiceTest {
         when(requirementRepository.findById(unknownReqtId)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(request, eq(userId)));
+        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(request, userId));
         verify(reportRepository, never()).save(any());
     }
 

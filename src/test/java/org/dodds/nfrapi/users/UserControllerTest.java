@@ -1,9 +1,11 @@
 package org.dodds.nfrapi.users;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.dodds.nfrapi.authentication.JwtService;
 import org.dodds.nfrapi.report.ReportDto;
 import org.dodds.nfrapi.report.ReportService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,10 +24,11 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+
+@Slf4j
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)   // skip JWT/security filters for now
 class UserControllerTest {
@@ -44,6 +47,16 @@ class UserControllerTest {
 
     @MockitoBean
     JwtService jwtService;   // JwtAuthenticationFilter is a @Component and needs it
+
+    @AfterEach
+    void clearContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void loginAs(UUID id) {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(id, null, List.of()));
+    }
 
     @Test
     void shouldGetAllUsersSortedByEmail() throws Exception {
@@ -65,11 +78,15 @@ class UserControllerTest {
     @Test
     void shouldGetAUser() throws Exception {
         var id = UUID.randomUUID();
-        var userDto = UserDto.builder().id(id).name("Test User1").email("user1@example.com").build();
+        var userDto = UserDto.builder()
+                .id(id)
+                .name("Test User1")
+                .email("user1@example.com")
+                .build();
 
-        when(userService.getUser(id)).thenReturn(userDto);
+        when(userService.getUser(any())).thenReturn(userDto);
 
-        mockMvc.perform(get("/users/{id}", id))
+        mockMvc.perform(get("/users/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()));
     }
@@ -77,11 +94,11 @@ class UserControllerTest {
     @Test
     void shouldNotGetAUserNotFound() throws Exception {
         var id = UUID.randomUUID();
-        var userDto = UserDto.builder().id(id).name("Test User1").email("user1@example.com").build();
 
         when(userService.getUser(id)).thenThrow(new UserNotFoundException());
 
-        mockMvc.perform(get("/users/{id}", id))
+        loginAs(id);
+        mockMvc.perform(get("/users/me"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("User not found"));
     }
@@ -94,7 +111,8 @@ class UserControllerTest {
 
         when(reportService.getReportsForUser(id, "name")).thenReturn(List.of(report1, report2));
 
-        mockMvc.perform(get("/users/{id}/reports", id).param("sort", "name"))
+        loginAs(id);
+        mockMvc.perform(get("/users/me/reports").param("sort", "name"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(report1.getId().toString()));
 
@@ -108,7 +126,8 @@ class UserControllerTest {
 
         when(reportService.getReportsForUser(id, "createdAt")).thenReturn(List.of(report));
 
-        mockMvc.perform(get("/users/{id}/reports", id))
+        loginAs(id);
+        mockMvc.perform(get("/users/me/reports"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(report.getId().toString()));
 
@@ -166,7 +185,8 @@ class UserControllerTest {
 
         when(userService.updateUser(eq(id), any(UpdateUserRequest.class))).thenReturn(userDto);
 
-        mockMvc.perform(put("/users/{id}", id)
+        loginAs(id);
+        mockMvc.perform(put("/users/me")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -182,7 +202,8 @@ class UserControllerTest {
 
         when(userService.updateUser(eq(id), any(UpdateUserRequest.class))).thenThrow(new UserNotFoundException());
 
-        mockMvc.perform(put("/users/{id}", id)
+        loginAs(id);
+        mockMvc.perform(put("/users/me")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
