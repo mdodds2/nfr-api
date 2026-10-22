@@ -14,6 +14,7 @@ import java.util.UUID;
 public class ReportDto {
     private UUID id;
     private UUID userId;
+    private String userName;
     private String name;
     private String description;
     private Boolean active;
