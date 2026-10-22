@@ -154,7 +154,6 @@ class UserControllerTest {
 
     @Test
     void shouldNotCreateAUserDuplicateEmail() throws Exception {
-        var userId = UUID.randomUUID();
         var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED1").build();
 
         when(userService.registerUser(any())).thenThrow(new DuplicateUserException());
