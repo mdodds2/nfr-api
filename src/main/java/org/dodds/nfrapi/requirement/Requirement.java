@@ -72,21 +72,4 @@ public class Requirement {
     @ManyToMany(mappedBy = "reportRequirements")
     private Set<Report> reports = new HashSet<>();
 
-    @Override
-    public String toString() {
-        return "Requirement{" +
-                "id=" + id +
-                ", identifier='" + identifier + '\'' +
-                ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", priority=" + priority +
-                ", status=" + status +
-                ", rationale='" + rationale + '\'' +
-                ", source='" + source + '\'' +
-                ", riskIfViolated='" + riskIfViolated + '\'' +
-                ", createdMoment=" + createdMoment +
-                ", updatedMoment=" + updatedMoment +
-                ", subCategory=" + subCategory +
-                '}';
-    }
 }

@@ -114,22 +114,26 @@ class ReportServiceTest {
     @DisplayName("Should return a report")
     @Test
     void shouldReturnReportWhenIdExists() {
-        UUID uuid = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
 
         Requirement requirement = Requirement.builder().id(UUID.randomUUID()).build();
         Measurement measurement = Measurement.builder().id(UUID.randomUUID()).build();
-        Report report = Report.builder().id(uuid).name("report name")
+        Report report = Report.builder()
+                .id(reportId)
+                .userId(userId)
+                .name("report name")
                 .reportRequirements(List.of(requirement))
                 .measurements(Set.of(measurement)).build();
 
         RequirementDto requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         MeasurementDto measurementDto = new MeasurementDto(/* fill in its fields */);
 
-        when(reportRepository.findById(uuid)).thenReturn(Optional.of(report));
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
         when(reportMapper.toDto(report)).thenReturn(ReportDto.builder().id(UUID.randomUUID()).build());
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
-        ReportDto result = reportService.getReport(uuid);
+        ReportDto result = reportService.getReport(reportId, userId);
 
         assertThat(result.getRequirements()).containsExactly(requirementDto);
         assertThat(result.getMeasurements()).containsExactly(measurementDto);
@@ -139,13 +143,14 @@ class ReportServiceTest {
     @Test
     void getReportNotFound() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
+        UUID reportId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
         // Act
 
         // Assert
-        assertThrows(ReportNotFoundException.class, () -> reportService.getReport(uuid));
+        assertThrows(ReportNotFoundException.class, () -> reportService.getReport(reportId, userId));
     }
 
     @DisplayName("Get report - for user")
@@ -304,12 +309,19 @@ class ReportServiceTest {
     @Test
     void deleteReportFound() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        Report report = Report.builder().id(uuid).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
+        UUID reportId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Report report = Report.builder()
+                .id(reportId)
+                .userId(userId)
+                .name("report name")
+                .reportRequirements(List.of())
+                .measurements(Set.of())
+                .build();
 
         // Act
-        when(reportRepository.findById(uuid)).thenReturn(Optional.of(report));
-        reportService.deleteReport(uuid);
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
+        reportService.deleteReport(reportId, userId);
 
         // Assert
         verify(reportRepository).delete(report);
@@ -319,15 +331,16 @@ class ReportServiceTest {
     @Test
     void deleteReportNotFound() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        Report report = Report.builder().id(uuid).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
+        UUID reportId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Report report = Report.builder().id(reportId).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
 
-        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
+        when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
         // Act
 
         // Assert
-        assertThrows(ReportNotFoundException.class, () -> reportService.deleteReport(uuid));
+        assertThrows(ReportNotFoundException.class, () -> reportService.deleteReport(reportId, userId));
         verify(reportRepository, never()).delete(report);
     }
 
@@ -344,7 +357,14 @@ class ReportServiceTest {
         var measurementDto = MeasurementDto.builder().id(UUID.randomUUID()).requirementId(requirementId).measurementMethod("method").build();
         var measurementsDto = List.of(measurementDto);
 
-        Report report = Report.builder().id(reportId).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
+        Report report = Report.builder()
+                .id(reportId)
+                .userId(userId)
+                .name("report name")
+                .reportRequirements(List.of())
+                .measurements(Set.of())
+                .build();
+
         UpdateReportRequest request = UpdateReportRequest.builder()
                 .name("report name")
                 .description("reportDescription")
@@ -362,12 +382,6 @@ class ReportServiceTest {
                 .measurements(measurementsDto)
                 .build();
 
-        var user = User.builder()
-                .id(UUID.randomUUID())
-                .name("Test User")
-                .build();
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
         when(requirementRepository.findById(requirementId)).thenReturn(Optional.of(requirement));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
@@ -396,12 +410,6 @@ class ReportServiceTest {
                 .measurements(List.of())
                 .build();
 
-        var user = User.builder()
-                .id(userId)
-                .name("test user")
-                .build();
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
         // Act
@@ -513,6 +521,57 @@ class ReportServiceTest {
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
         assertThat(reportDto.getMeasurements()).containsExactly(measurementDto);
+    }
+
+    @Test
+    void shouldNotUpdateReportWrongUser() {
+        // Arrange
+        var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
+        var report = Report.builder()
+                .id(reportId)
+                .userId(UUID.randomUUID())
+                .name("report name")
+                .reportRequirements(List.of())
+                .measurements(Set.of())
+                .build();
+
+        var request = UpdateReportRequest.builder()
+                .name("report name")
+                .description("reportDescription")
+                .requirementIds(List.of())
+                .measurements(List.of())
+                .build();
+
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
+
+        // Act
+
+        // Assert
+        assertThrows(ReportNotFoundException.class, () -> reportService.updateReport(reportId, userId, request));
+        verify(reportRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNotDeleteReportWrongUser() {
+        // Arrange
+        var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
+        var report = Report.builder()
+                .id(reportId)
+                .userId(UUID.randomUUID())
+                .name("report name")
+                .reportRequirements(List.of())
+                .measurements(Set.of())
+                .build();
+
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
+
+        // Act
+
+        // Assert
+        assertThrows(ReportNotFoundException.class, () -> reportService.deleteReport(reportId, userId));
+        verify(reportRepository, never()).delete(any());
     }
 
 }

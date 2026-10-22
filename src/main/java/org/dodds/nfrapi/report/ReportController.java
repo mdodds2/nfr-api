@@ -25,14 +25,16 @@ public class ReportController {
     }
 
     @GetMapping("/{id}")
-    public ReportDto getReport(@PathVariable UUID id) {
-        return reportService.getReport(id);
+    public ReportDto getReport(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID userId) {
+        return reportService.getReport(id, userId);
     }
 
     @PostMapping
     public ResponseEntity<?> createReport(
-            @Valid
-            @RequestBody CreateReportRequest request, @AuthenticationPrincipal UUID userId, UriComponentsBuilder uriBuilder) {
+            @Valid @RequestBody CreateReportRequest request,
+            @AuthenticationPrincipal UUID userId, UriComponentsBuilder uriBuilder) {
         var reportDto = reportService.createReport(userId, request);
         var uri = uriBuilder.path("/reports/{id}").buildAndExpand(reportDto.getId()).toUri();
         return ResponseEntity.created(uri).body(reportDto);
@@ -47,8 +49,10 @@ public class ReportController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReport(@PathVariable UUID id) {
-        reportService.deleteReport(id);
+    public ResponseEntity<Void> deleteReport(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UUID userId) {
+        reportService.deleteReport(id, userId);
         return ResponseEntity.noContent().build();
     }
 

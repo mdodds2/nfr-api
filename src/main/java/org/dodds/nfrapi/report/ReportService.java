@@ -52,8 +52,10 @@ public class ReportService {
         return reportDtos;
     }
 
-    public ReportDto getReport(UUID id) {
-        var report = reportRepository.findById(id).orElseThrow(ReportNotFoundException::new);
+    public ReportDto getReport(UUID id, UUID userId) {
+        var report = reportRepository.findById(id)
+                .filter(r -> r.getUserId().equals(userId))
+                .orElseThrow(ReportNotFoundException::new);
         var reportDto = toDtoWithOwner(report);
 
         var requirementDtos = report.getReportRequirements().stream()
@@ -124,8 +126,9 @@ public class ReportService {
     }
 
     public ReportDto updateReport(UUID reportId, UUID userId, UpdateReportRequest request) {
-        userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-        var report = reportRepository.findById(reportId).orElseThrow(ReportNotFoundException::new);
+        var report = reportRepository.findById(reportId)
+            .filter(r -> r.getUserId().equals(userId))
+            .orElseThrow(ReportNotFoundException::new);
         reportMapper.update(request, report);
 
         List<Requirement> requirementList = new ArrayList<>();
@@ -147,8 +150,10 @@ public class ReportService {
         return reportMapper.toDto(report);
     }
 
-    public void deleteReport(UUID id) {
-        var report = reportRepository.findById(id).orElseThrow(ReportNotFoundException::new);
+    public void deleteReport(UUID id, UUID userId) {
+        var report = reportRepository.findById(id)
+                .filter(r -> r.getUserId().equals(userId))
+                .orElseThrow(ReportNotFoundException::new);
         reportRepository.delete(report);
     }
 

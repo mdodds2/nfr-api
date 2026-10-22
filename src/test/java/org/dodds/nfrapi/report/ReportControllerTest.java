@@ -2,12 +2,14 @@ package org.dodds.nfrapi.report;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dodds.nfrapi.authentication.JwtService;
-import org.dodds.nfrapi.users.UserNotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -36,6 +38,16 @@ public class ReportControllerTest {
     @MockitoBean
     JwtService jwtService;   // JwtAuthenticationFilter is a @Component and needs it
 
+    @AfterEach
+    void clearContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void loginAs(UUID id) {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(id, null, List.of()));
+    }
+
     @Test
     void shouldGetAllReports() throws Exception {
 
@@ -56,10 +68,12 @@ public class ReportControllerTest {
     @Test
     void shouldGetAReport() throws Exception {
         var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
         var reportDto = ReportDto.builder().id(reportId).name("Report 1").build();
 
-        when(reportService.getReport(reportId)).thenReturn(reportDto);
+        when(reportService.getReport(reportId, userId)).thenReturn(reportDto);
 
+        loginAs(userId);
         mockMvc.perform((get("/reports/{id}", reportId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(reportId.toString()));
@@ -68,8 +82,10 @@ public class ReportControllerTest {
     @Test
     void shouldNotGetAReportNotFound() throws Exception {
         var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
 
-        when(reportService.getReport(reportId)).thenThrow(new ReportNotFoundException());
+        loginAs(userId);
+        when(reportService.getReport(reportId, userId)).thenThrow(new ReportNotFoundException());
 
         mockMvc.perform((get("/reports/{id}", reportId)))
                 .andExpect(status().isNotFound());
@@ -181,19 +197,24 @@ public class ReportControllerTest {
     @Test
     void shouldDeleteReport() throws Exception {
         var reportId = UUID.randomUUID();
-        doNothing().when(reportService).deleteReport(reportId);
+        var userId = UUID.randomUUID();
+        doNothing().when(reportService).deleteReport(reportId, userId);
         mockMvc.perform(delete("/reports/{id}", reportId))
                 .andExpect(status().isNoContent());
-        verify(reportService).deleteReport(reportId);
+        verify(reportService).deleteReport(any(), any());
     }
 
     @Test
     void shouldNotDeleteReportNotFound() throws Exception {
         var reportId = UUID.randomUUID();
-        doThrow(new ReportNotFoundException()).when(reportService).deleteReport(reportId);
+        var userId = UUID.randomUUID();
+
+        doThrow(new ReportNotFoundException()).when(reportService).deleteReport(reportId, userId);
+
+        loginAs(userId);
         mockMvc.perform(delete("/reports/{id}", reportId))
                 .andExpect(status().isNotFound());
-        verify(reportService).deleteReport(reportId);
+        verify(reportService).deleteReport(any(), any());
     }
 
     @Test
