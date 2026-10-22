@@ -156,7 +156,6 @@ class UserControllerTest {
     void shouldNotCreateAUserDuplicateEmail() throws Exception {
         var userId = UUID.randomUUID();
         var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED1").build();
-        var userDto = UserDto.builder().id(userId).name("Test User").email("user@example.com").build();
 
         when(userService.registerUser(any())).thenThrow(new DuplicateUserException());
 
@@ -305,8 +304,6 @@ class UserControllerTest {
 
     @Test
     void shouldNotChangeLoggedInUserBadRequest() throws Exception {
-        var id = UUID.randomUUID();
-
         var request = ChangePasswordRequest.builder().oldPassword("OLDPASSWORD").newPassword("NEW").build();
 
         mockMvc.perform(post("/users/me/change-password")

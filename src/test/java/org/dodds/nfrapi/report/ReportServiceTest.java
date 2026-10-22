@@ -178,7 +178,7 @@ class ReportServiceTest {
 
         // Assert
         assertThat(result).containsExactly(reportDto);
-        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());;
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Get report - for user sorted by createdAt")
@@ -210,7 +210,7 @@ class ReportServiceTest {
 
         // Assert
         assertThat(result).containsExactly(reportDto);
-        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());;
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Get report - for user sorted by other")
@@ -242,7 +242,7 @@ class ReportServiceTest {
 
         // Assert
         assertThat(result).containsExactly(reportDto);
-        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());;
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Get report - for user sorted by null")
@@ -274,7 +274,7 @@ class ReportServiceTest {
 
         // Assert
         assertThat(result).containsExactly(reportDto);
-        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());;
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Create report with an unknown requirement id")
@@ -400,7 +400,7 @@ class ReportServiceTest {
     }
 
     @Test
-    void shouldGetAllReportsSortedByName() throws Exception {
+    void shouldGetAllReportsSortedByName() {
         var requirement = Requirement.builder().id(UUID.randomUUID()).build();
         var measurement = Measurement.builder().id(UUID.randomUUID()).build();
         var report = Report.builder()
@@ -426,7 +426,7 @@ class ReportServiceTest {
      }
 
     @Test
-    void shouldGetAllReportsSortedByCreatedAt() throws Exception {
+    void shouldGetAllReportsSortedByCreatedAt() {
         var requirement = Requirement.builder().id(UUID.randomUUID()).build();
         var measurement = Measurement.builder().id(UUID.randomUUID()).build();
         var report = Report.builder()
@@ -452,7 +452,7 @@ class ReportServiceTest {
     }
 
     @Test
-    void shouldGetAllReportsSortedByOther() throws Exception {
+    void shouldGetAllReportsSortedByOther() {
         var requirement = Requirement.builder().id(UUID.randomUUID()).build();
         var measurement = Measurement.builder().id(UUID.randomUUID()).build();
         var report = Report.builder()
@@ -478,7 +478,7 @@ class ReportServiceTest {
     }
 
     @Test
-    void shouldGetAllReportsSortedByNull() throws Exception {
+    void shouldGetAllReportsSortedByNull() {
         var requirement = Requirement.builder().id(UUID.randomUUID()).build();
         var measurement = Measurement.builder().id(UUID.randomUUID()).build();
         var report = Report.builder()
