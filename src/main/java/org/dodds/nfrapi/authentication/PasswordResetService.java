@@ -29,8 +29,8 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepository;
 
     @Transactional
-    public void requestReset(String emailId) {
-        userRepository.findByEmail(emailId).ifPresent( user -> {
+    public void requestReset(String email) {
+        userRepository.findByEmail(email).ifPresent( user -> {
             var rawToken = generateToken();
             var token = PasswordResetToken.builder()
                     .userId(user.getId())

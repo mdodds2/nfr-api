@@ -31,6 +31,9 @@ public class AuthControllerTest {
     AuthService authService;
 
     @MockitoBean
+    PasswordResetService passwordResetService;
+
+    @MockitoBean
     JwtConfig jwtConfig;   // JwtAuthenticationFilter is a @Component and needs it
 
     @MockitoBean
@@ -120,6 +123,30 @@ public class AuthControllerTest {
 
         mockMvc.perform(post("/auth/refresh"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldAcceptForgotPassword() throws Exception {
+
+        var request = new ForgotPasswordRequest("user@domain.com");
+
+        mockMvc.perform(post("/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isAccepted());
+
+        verify(passwordResetService).requestReset("user@domain.com");
+    }
+
+    @Test
+    void shouldResetPassword() throws Exception {
+        var request = new ResetPasswordRequest("RAW_TOKEN", "NEW_PASSWORD");
+        mockMvc.perform(post("/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNoContent());
+
+        verify(passwordResetService).resetPassword("RAW_TOKEN", "NEW_PASSWORD");
     }
 
 }
