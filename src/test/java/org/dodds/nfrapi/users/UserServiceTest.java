@@ -278,4 +278,17 @@ public class UserServiceTest {
         verifyNoInteractions(passwordEncoder);
     }
 
+    @Test
+    void shouldNotUpdateDuplicateUser() {
+        var userId = UUID.randomUUID();
+        var user = User.builder().id(userId).email("a@b.com").password("HASH").build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userRepository.existsByEmail(any())).thenReturn(true);
+
+        assertThrows(DuplicateEmailException.class, () -> userService.updateUser(userId, new UpdateUserRequest("New Name", "new@b.com")));
+        verify(userRepository, never()).save(user);
+        verifyNoInteractions(passwordEncoder);
+    }
+
 }

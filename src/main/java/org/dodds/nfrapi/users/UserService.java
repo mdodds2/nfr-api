@@ -51,6 +51,11 @@ public class UserService {
 
     public UserDto updateUser(UUID id, UpdateUserRequest request) {
         var user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+
+        if (!user.getEmail().equals(request.getEmail()) && userRepository.existsByEmail(request.getEmail()))
+            throw new DuplicateEmailException();
+
+
         userMapper.update(request, user);
         userRepository.save(user);
         return userMapper.toDto(user);

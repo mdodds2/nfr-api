@@ -194,6 +194,18 @@ class UserControllerTest {
     }
 
     @Test
+    void shouldNotUpdateAUserDuplicateEmail() throws Exception {
+        var request = UpdateUserRequest.builder().name("Test User").email("user@domain.com").build();
+
+        when(userService.updateUser(any(), any())).thenThrow(new DuplicateEmailException());
+
+        mockMvc.perform(put("/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void shouldDeleteAUser() throws Exception {
         var id = UUID.randomUUID();
 
