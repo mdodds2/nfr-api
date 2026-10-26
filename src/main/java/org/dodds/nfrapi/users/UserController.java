@@ -19,7 +19,7 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-    private final ReportService reportsService;
+    private final ReportService reportService;
 
 
     @GetMapping
@@ -28,16 +28,16 @@ public class UserController {
         return userService.getAllUsers(sortBy);
     }
 
-    @GetMapping("/{id}")
-    public UserDto getUser(@PathVariable UUID id) {
-        return userService.getUser(id);
+    @GetMapping("/me")
+    public UserDto getUser(@AuthenticationPrincipal UUID userId) {
+        return userService.getUser(userId);
     }
 
-    @GetMapping("/{id}/reports")
+    @GetMapping("/me/reports")
     public Iterable<ReportDto> getReportsForUser(
-            @PathVariable UUID id,
-            @RequestParam(required = false, defaultValue = "createdAt", name = "sort") String sortBy) {
-        return reportsService.getReportsForUser(id, sortBy);
+            @RequestParam(required = false, defaultValue = "createdAt", name = "sort") String sortBy,
+            @AuthenticationPrincipal UUID userId) {
+        return reportService.getReportsForUser(userId, sortBy);
     }
 
     @PostMapping
@@ -49,11 +49,11 @@ public class UserController {
         return ResponseEntity.created(uri).body(userDto);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/me")
     public UserDto updateUser(
-            @PathVariable(name = "id") UUID id,
-            @RequestBody UpdateUserRequest request) {
-        return userService.updateUser(id, request);
+            @Valid @RequestBody UpdateUserRequest request, @AuthenticationPrincipal UUID userId) {
+
+        return userService.updateUser(userId, request);
     }
 
     @DeleteMapping("/{id}")

@@ -1,6 +1,8 @@
 package org.dodds.nfrapi.report;
 
 import org.dodds.nfrapi.requirement.*;
+import org.dodds.nfrapi.users.User;
+import org.dodds.nfrapi.users.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,9 @@ class ReportServiceTest {
     ReportRepository reportRepository;
 
     @Mock
+    UserRepository userRepository;
+
+    @Mock
     RequirementRepository requirementRepository;
 
     @Mock
@@ -42,6 +47,7 @@ class ReportServiceTest {
     void shouldCreateAReport() {
 
         // Arrange
+        var userId = UUID.randomUUID();
         var requirementId = UUID.randomUUID();
         var requirement = Requirement.builder().id(requirementId).title("Requirement 1").build();
         var requirementsDto = List.of(RequirementDto.builder().id(requirementId).title("Title 1").build());
@@ -51,7 +57,6 @@ class ReportServiceTest {
         var measurementsDto = List.of(measurementDto);
 
         CreateReportRequest request = CreateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("project name")
                 .description("project description")
                 .requirementIds(List.of(requirementId))
@@ -62,68 +67,73 @@ class ReportServiceTest {
 
         ReportDto dto = ReportDto.builder().
                 id(UUID.randomUUID()).
-                userId(request.getUserId()).
+                userId(userId).
                 name(request.getName()).
                 description(request.getDescription()).
                 active(true).
                 requirements(requirementsDto).
                 measurements(measurementsDto).build();
 
-        when(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())).thenReturn(false);
+        when(reportRepository.existsByUserIdAndName(userId, request.getName())).thenReturn(false);
         when(requirementRepository.findById(requirementId)).thenReturn(Optional.of(requirement));
         when(reportMapper.toEntity(request)).thenReturn(report);
         when(reportMapper.toDto(report)).thenReturn(dto);
         when(measurementMapper.toEntity(measurementDto)).thenReturn(measurement);
 
         // Act
-        ReportDto result = reportService.createReport(request);
+        ReportDto result = reportService.createReport(userId, request);
 
         // Assert
         assertEquals(request.getName(), result.getName());
+        assertEquals(userId, result.getUserId());
         verify(reportRepository).save(report);
-
     }
 
     @DisplayName("shouldThrowDuplicateReportWhenNameExistsForUser")
     @Test
     void shouldThrowDuplicateReportWhenNameExistsForUser() {
 
+        UUID userId = UUID.randomUUID();
         // Arrange
-        CreateReportRequest request = new CreateReportRequest(
-                UUID.randomUUID(),
-                "project name",
-                "project description",
-                List.of(),
-                List.of());
+        CreateReportRequest request = CreateReportRequest.builder()
+                .name("project name")
+                .description("project description")
+                .requirementIds(List.of())
+                .measurements(List.of())
+                .build();
 
-        when(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())).thenReturn(true);
+        when(reportRepository.existsByUserIdAndName(any(), any())).thenReturn(true);
 
         // Act
 
         // Assert
-        assertThrows(DuplicateReportException.class, () -> reportService.createReport(request));
+        assertThrows(DuplicateReportException.class, () -> reportService.createReport(userId, request));
         verify(reportRepository, never()).save(any());
     }
 
     @DisplayName("Should return a report")
     @Test
     void shouldReturnReportWhenIdExists() {
-        UUID uuid = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
 
         Requirement requirement = Requirement.builder().id(UUID.randomUUID()).build();
         Measurement measurement = Measurement.builder().id(UUID.randomUUID()).build();
-        Report report = Report.builder().id(uuid).name("report name")
+        Report report = Report.builder()
+                .id(reportId)
+                .userId(userId)
+                .name("report name")
                 .reportRequirements(List.of(requirement))
                 .measurements(Set.of(measurement)).build();
 
         RequirementDto requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         MeasurementDto measurementDto = new MeasurementDto(/* fill in its fields */);
 
-        when(reportRepository.findById(uuid)).thenReturn(Optional.of(report));
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
         when(reportMapper.toDto(report)).thenReturn(ReportDto.builder().id(UUID.randomUUID()).build());
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
-        ReportDto result = reportService.getReport(uuid);
+        ReportDto result = reportService.getReport(reportId, userId);
 
         assertThat(result.getRequirements()).containsExactly(requirementDto);
         assertThat(result.getMeasurements()).containsExactly(measurementDto);
@@ -133,13 +143,14 @@ class ReportServiceTest {
     @Test
     void getReportNotFound() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
+        UUID reportId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
         // Act
 
         // Assert
-        assertThrows(ReportNotFoundException.class, () -> reportService.getReport(uuid));
+        assertThrows(ReportNotFoundException.class, () -> reportService.getReport(reportId, userId));
     }
 
     @DisplayName("Get report - for user")
@@ -157,14 +168,21 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
+        var user = User.builder()
+                 .id(UUID.randomUUID())
+                 .name("Test User")
+                 .build();
+
         when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
 
         // Act
         var result = reportService.getReportsForUser(userid, "name");
 
         // Assert
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result).containsExactly(reportDto);
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Get report - for user sorted by createdAt")
@@ -182,14 +200,21 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
+        var user = User.builder()
+                .id(UUID.randomUUID())
+                .name("Test User")
+                .build();
+
         when(reportRepository.findAllByUserId(userid, Sort.by("createdAt"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
 
         // Act
         var result = reportService.getReportsForUser(userid, "createdAt");
 
         // Assert
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result).containsExactly(reportDto);
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Get report - for user sorted by other")
@@ -207,14 +232,21 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
+        var user = User.builder()
+                .id(UUID.randomUUID())
+                .name("Test User")
+                .build();
+
         when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
 
         // Act
         var result = reportService.getReportsForUser(userid, "other");
 
         // Assert
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result).containsExactly(reportDto);
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Get report - for user sorted by null")
@@ -232,35 +264,44 @@ class ReportServiceTest {
                 .build();
         var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
 
+        var user = User.builder()
+                .id(UUID.randomUUID())
+                .name("Test User")
+                .build();
+
         when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
+        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
 
         // Act
         var result = reportService.getReportsForUser(userid, null);
 
         // Assert
         assertThat(result).containsExactly(reportDto);
+        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Create report with an unknown requirement id")
     @Test
     void createReportWithAnUnknownRequirementId() {
         // Arrange
-        UUID unknownId = UUID.randomUUID();
-        CreateReportRequest request = new CreateReportRequest(
-                UUID.randomUUID(),
-                "project name",
-                "project description",
-                List.of(unknownId),
-                List.of());
+        UUID userId = UUID.randomUUID();
+        UUID unknownReqtId = UUID.randomUUID();
+        CreateReportRequest request = CreateReportRequest.builder()
+                .name("project name")
+                .description("project description")
+                .requirementIds(List.of(unknownReqtId))
+                .measurements(List.of())
+                .build();
+
         Report report = Report.builder().name(request.getName()).build();
 
-        when(reportRepository.existsByUserIdAndName(request.getUserId(), request.getName())).thenReturn(false);
+        when(reportRepository.existsByUserIdAndName(any(), any())).thenReturn(false);
         when(reportMapper.toEntity(request)).thenReturn(report);
-        when(requirementRepository.findById(unknownId)).thenReturn(Optional.empty());
+        when(requirementRepository.findById(unknownReqtId)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(request));
+        assertThrows(RequirementNotFoundException.class, () -> reportService.createReport(userId, request));
         verify(reportRepository, never()).save(any());
     }
 
@@ -268,12 +309,19 @@ class ReportServiceTest {
     @Test
     void deleteReportFound() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        Report report = Report.builder().id(uuid).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
+        UUID reportId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Report report = Report.builder()
+                .id(reportId)
+                .userId(userId)
+                .name("report name")
+                .reportRequirements(List.of())
+                .measurements(Set.of())
+                .build();
 
         // Act
-        when(reportRepository.findById(uuid)).thenReturn(Optional.of(report));
-        reportService.deleteReport(uuid);
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
+        reportService.deleteReport(reportId, userId);
 
         // Assert
         verify(reportRepository).delete(report);
@@ -283,15 +331,16 @@ class ReportServiceTest {
     @Test
     void deleteReportNotFound() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        Report report = Report.builder().id(uuid).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
+        UUID reportId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Report report = Report.builder().id(reportId).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
 
-        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
+        when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
         // Act
 
         // Assert
-        assertThrows(ReportNotFoundException.class, () -> reportService.deleteReport(uuid));
+        assertThrows(ReportNotFoundException.class, () -> reportService.deleteReport(reportId, userId));
         verify(reportRepository, never()).delete(report);
     }
 
@@ -308,9 +357,15 @@ class ReportServiceTest {
         var measurementDto = MeasurementDto.builder().id(UUID.randomUUID()).requirementId(requirementId).measurementMethod("method").build();
         var measurementsDto = List.of(measurementDto);
 
-        Report report = Report.builder().id(reportId).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
-        UpdateReportRequest request = UpdateReportRequest.builder()
+        Report report = Report.builder()
+                .id(reportId)
                 .userId(userId)
+                .name("report name")
+                .reportRequirements(List.of())
+                .measurements(Set.of())
+                .build();
+
+        UpdateReportRequest request = UpdateReportRequest.builder()
                 .name("report name")
                 .description("reportDescription")
                 .requirementIds(List.of(requirementId))
@@ -333,10 +388,10 @@ class ReportServiceTest {
         when(measurementMapper.toEntity(measurementDto)).thenReturn(measurement);
 
         // Act
-        ReportDto result = reportService.updateReport(reportId, request);
+        ReportDto result = reportService.updateReport(reportId, userId, request);
 
         // Assert
-        assertEquals(request.getUserId(), result.getUserId());
+        assertEquals(userId, result.getUserId());
         verify(reportMapper).update(request, report);
         verify(reportRepository).save(report);
     }
@@ -345,26 +400,27 @@ class ReportServiceTest {
     @Test
     void shouldNotUpdateReportNotFound() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-        Report report = Report.builder().id(uuid).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
-        UpdateReportRequest request = new UpdateReportRequest(
-                uuid,
-                "report name",
-                "reportDescription",
-                List.of(),
-                List.of());
+        var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
+        var report = Report.builder().id(reportId).name("report name").reportRequirements(List.of()).measurements(Set.of()).build();
+        var request = UpdateReportRequest.builder()
+                .name("report name")
+                .description("reportDescription")
+                .requirementIds(List.of())
+                .measurements(List.of())
+                .build();
 
-        when(reportRepository.findById(uuid)).thenReturn(Optional.empty());
+        when(reportRepository.findById(reportId)).thenReturn(Optional.empty());
 
         // Act
 
         // Assert
-        assertThrows(ReportNotFoundException.class, () -> reportService.updateReport(uuid, request));
+        assertThrows(ReportNotFoundException.class, () -> reportService.updateReport(reportId, userId, request));
         verify(reportRepository, never()).save(report);
     }
 
     @Test
-    void shouldGetAllReportsSortedByName() throws Exception {
+    void shouldGetAllReportsSortedByName() {
         var requirement = Requirement.builder().id(UUID.randomUUID()).build();
         var measurement = Measurement.builder().id(UUID.randomUUID()).build();
         var report = Report.builder()
@@ -377,12 +433,12 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(any(), eq(Sort.by("name")))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports("name");
+        var result = reportService.getAllReports(UUID.randomUUID(), "name");
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
@@ -390,7 +446,7 @@ class ReportServiceTest {
      }
 
     @Test
-    void shouldGetAllReportsSortedByCreatedAt() throws Exception {
+    void shouldGetAllReportsSortedByCreatedAt() {
         var requirement = Requirement.builder().id(UUID.randomUUID()).build();
         var measurement = Measurement.builder().id(UUID.randomUUID()).build();
         var report = Report.builder()
@@ -403,12 +459,12 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("createdAt"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(any(), eq(Sort.by("createdAt")))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports("createdAt");
+        var result = reportService.getAllReports(UUID.randomUUID(), "createdAt");
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
@@ -416,7 +472,7 @@ class ReportServiceTest {
     }
 
     @Test
-    void shouldGetAllReportsSortedByOther() throws Exception {
+    void shouldGetAllReportsSortedByOther() {
         var requirement = Requirement.builder().id(UUID.randomUUID()).build();
         var measurement = Measurement.builder().id(UUID.randomUUID()).build();
         var report = Report.builder()
@@ -429,12 +485,12 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(any(), eq(Sort.by("name")))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports("other");
+        var result = reportService.getAllReports(UUID.randomUUID(), "other");
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
@@ -442,7 +498,7 @@ class ReportServiceTest {
     }
 
     @Test
-    void shouldGetAllReportsSortedByNull() throws Exception {
+    void shouldGetAllReportsSortedByNull() {
         var requirement = Requirement.builder().id(UUID.randomUUID()).build();
         var measurement = Measurement.builder().id(UUID.randomUUID()).build();
         var report = Report.builder()
@@ -455,16 +511,67 @@ class ReportServiceTest {
         var requirementDto = RequirementDto.builder().id(requirement.getId()).build();
         var measurementDto = MeasurementDto.builder().id(measurement.getId()).build();
 
-        when(reportRepository.findAll(Sort.by("name"))).thenReturn(List.of(report));
+        when(reportRepository.findAllByUserId(any(), eq(Sort.by("name")))).thenReturn(List.of(report));
         when(reportMapper.toDto(report)).thenReturn(reportDto);
         when(requirementMapper.toDto(requirement)).thenReturn(requirementDto);
         when(measurementMapper.toDto(measurement)).thenReturn(measurementDto);
 
-        var result = reportService.getAllReports(null);
+        var result = reportService.getAllReports(UUID.randomUUID(), null);
 
         assertThat(result).containsExactly(reportDto);
         assertThat(reportDto.getRequirements()).containsExactly(requirementDto);
         assertThat(reportDto.getMeasurements()).containsExactly(measurementDto);
+    }
+
+    @Test
+    void shouldNotUpdateReportWrongUser() {
+        // Arrange
+        var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
+        var report = Report.builder()
+                .id(reportId)
+                .userId(UUID.randomUUID())
+                .name("report name")
+                .reportRequirements(List.of())
+                .measurements(Set.of())
+                .build();
+
+        var request = UpdateReportRequest.builder()
+                .name("report name")
+                .description("reportDescription")
+                .requirementIds(List.of())
+                .measurements(List.of())
+                .build();
+
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
+
+        // Act
+
+        // Assert
+        assertThrows(ReportNotFoundException.class, () -> reportService.updateReport(reportId, userId, request));
+        verify(reportRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNotDeleteReportWrongUser() {
+        // Arrange
+        var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
+        var report = Report.builder()
+                .id(reportId)
+                .userId(UUID.randomUUID())
+                .name("report name")
+                .reportRequirements(List.of())
+                .measurements(Set.of())
+                .build();
+
+        when(reportRepository.findById(reportId)).thenReturn(Optional.of(report));
+
+        // Act
+
+        // Assert
+        assertThrows(ReportNotFoundException.class, () -> reportService.deleteReport(reportId, userId));
+        verify(reportRepository, never()).delete(any());
     }
 
 }

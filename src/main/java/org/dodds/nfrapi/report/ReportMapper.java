@@ -7,6 +7,7 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface ReportMapper {
 
+    @Mapping(target = "userName", ignore = true)
     @Mapping(target = "requirements", ignore = true)
     ReportDto toDto(Report report);
 

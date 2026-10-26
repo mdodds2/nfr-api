@@ -134,7 +134,6 @@ Version-update PRs target `develop` so they follow the normal flow. Security upd
 **H2 now, Testcontainers later.** H2 keeps the suite fast and self-contained, and CI needs no Docker or external database. The trade-off is that H2 does not behave exactly like a production database. Once the production database is fixed, I plan to add a Testcontainers-based integration test profile. It would slot into the existing CI workflow from (a).
 
 **JaCoCo minimum of 80% line coverage.** The gate is set well below current coverage (about 99.7% line). It acts as a floor that catches real regressions, such as a large untested feature, without failing builds over small fluctuations. Actual coverage is shown through the report artifact. A branch-coverage limit (current coverage is about 95.7%) could be added later if branch coverage starts to slip.
-- Update:  90% branch coverage was added.
 
 **CD deferred.** Continuous deployment has no value without a target, and choosing one involves cost and operational decisions that shouldn't be rushed. A published GHCR image (f) keeps the project ready to deploy to most container hosts once one is chosen.
 

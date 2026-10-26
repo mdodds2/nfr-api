@@ -2,11 +2,14 @@ package org.dodds.nfrapi.report;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dodds.nfrapi.authentication.JwtService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,6 +38,16 @@ public class ReportControllerTest {
     @MockitoBean
     JwtService jwtService;   // JwtAuthenticationFilter is a @Component and needs it
 
+    @AfterEach
+    void clearContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void loginAs(UUID id) {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(id, null, List.of()));
+    }
+
     @Test
     void shouldGetAllReports() throws Exception {
 
@@ -42,7 +55,7 @@ public class ReportControllerTest {
         var report2 = ReportDto.builder().id(UUID.randomUUID()).name("Report 2").build();
         var report3 = ReportDto.builder().id(UUID.randomUUID()).name("Report 3").build();
 
-        when(reportService.getAllReports("")).thenReturn(List.of(report1, report2, report3));
+        when(reportService.getAllReports(any(),eq(""))).thenReturn(List.of(report1, report2, report3));
 
         mockMvc.perform(get("/reports"))
                 .andExpect(status().isOk())
@@ -55,10 +68,12 @@ public class ReportControllerTest {
     @Test
     void shouldGetAReport() throws Exception {
         var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
         var reportDto = ReportDto.builder().id(reportId).name("Report 1").build();
 
-        when(reportService.getReport(reportId)).thenReturn(reportDto);
+        when(reportService.getReport(reportId, userId)).thenReturn(reportDto);
 
+        loginAs(userId);
         mockMvc.perform((get("/reports/{id}", reportId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(reportId.toString()));
@@ -67,8 +82,10 @@ public class ReportControllerTest {
     @Test
     void shouldNotGetAReportNotFound() throws Exception {
         var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
 
-        when(reportService.getReport(reportId)).thenThrow(new ReportNotFoundException());
+        loginAs(userId);
+        when(reportService.getReport(reportId, userId)).thenThrow(new ReportNotFoundException());
 
         mockMvc.perform((get("/reports/{id}", reportId)))
                 .andExpect(status().isNotFound());
@@ -77,7 +94,6 @@ public class ReportControllerTest {
     @Test
     void shouldCreateAReport() throws Exception {
         var request = CreateReportRequest.builder()
-                        .userId(UUID.randomUUID())
                         .name("report1")
                         .description("some description")
                         .build();
@@ -89,7 +105,7 @@ public class ReportControllerTest {
                         .description("some description")
                         .build();
 
-        when(reportService.createReport(any())).thenReturn(dto);
+        when(reportService.createReport(any(), any())).thenReturn(dto);
 
         mockMvc.perform((post("/reports")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -106,18 +122,17 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).createReport(any());
+        verify(reportService, never()).createReport(any(), any());
     }
 
     @Test
     void shouldNotCreateAReportDuplicate() throws Exception {
         var request = CreateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("report1")
                 .description("some description")
                 .build();
 
-        when(reportService.createReport(any())).thenThrow(new DuplicateReportException());
+        when(reportService.createReport(any(),any())).thenThrow(new DuplicateReportException());
 
         mockMvc.perform((post("/reports")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -129,7 +144,6 @@ public class ReportControllerTest {
     void shouldUpdateAReport() throws Exception {
         var userId = UUID.randomUUID();
         var request = UpdateReportRequest.builder()
-                .userId(userId)
                 .name("report1")
                 .description("some description changed")
                 .build();
@@ -142,7 +156,7 @@ public class ReportControllerTest {
                 .description("some description changed")
                 .build();
 
-        when(reportService.updateReport(eq(reportId), any())).thenReturn(dto);
+        when(reportService.updateReport(eq(reportId), any(), any())).thenReturn(dto);
 
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -153,16 +167,14 @@ public class ReportControllerTest {
 
     @Test
     void shouldNotUpdateAReportNotFound() throws Exception {
-        var userId = UUID.randomUUID();
         var request = UpdateReportRequest.builder()
-                .userId(userId)
                 .name("report1")
                 .description("some description changed")
                 .build();
 
         var reportId = UUID.randomUUID();
 
-        when(reportService.updateReport(eq(reportId), any())).thenThrow(new ReportNotFoundException());
+        when(reportService.updateReport(eq(reportId), any(), any())).thenThrow(new ReportNotFoundException());
 
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -172,52 +184,42 @@ public class ReportControllerTest {
 
     @Test
     void shouldNotUpdateAReportBadRequest() throws Exception {
-        var request = UpdateReportRequest.builder().build();
         var reportId = UUID.randomUUID();
+        var request = UpdateReportRequest.builder().build();
 
         mockMvc.perform(put("/reports/{id}", reportId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).updateReport(any(), any());
+        verify(reportService, never()).updateReport(any(), any(), any());
     }
 
     @Test
     void shouldDeleteReport() throws Exception {
         var reportId = UUID.randomUUID();
-        doNothing().when(reportService).deleteReport(reportId);
+        var userId = UUID.randomUUID();
+        doNothing().when(reportService).deleteReport(reportId, userId);
         mockMvc.perform(delete("/reports/{id}", reportId))
                 .andExpect(status().isNoContent());
-        verify(reportService).deleteReport(reportId);
+        verify(reportService).deleteReport(any(), any());
     }
 
     @Test
     void shouldNotDeleteReportNotFound() throws Exception {
         var reportId = UUID.randomUUID();
-        doThrow(new ReportNotFoundException()).when(reportService).deleteReport(reportId);
+        var userId = UUID.randomUUID();
+
+        doThrow(new ReportNotFoundException()).when(reportService).deleteReport(reportId, userId);
+
+        loginAs(userId);
         mockMvc.perform(delete("/reports/{id}", reportId))
                 .andExpect(status().isNotFound());
-        verify(reportService).deleteReport(reportId);
-    }
-
-    @Test
-    void shouldNotCreateAReportMissingUserId() throws Exception {
-        var request = CreateReportRequest.builder()
-                .name("report1")
-                .description("some description")
-                .build();
-
-        mockMvc.perform((post("/reports")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))))
-                .andExpect(status().isBadRequest());
-        verify(reportService, never()).createReport(any());
+        verify(reportService).deleteReport(any(), any());
     }
 
     @Test
     void shouldNotCreateAReportBlankName() throws Exception {
         var request = CreateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("")
                 .description("some description")
                 .build();
@@ -226,27 +228,12 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).createReport(any());
-    }
-
-    @Test
-    void shouldNotUpdateAReportMissingUserId() throws Exception {
-        var request = UpdateReportRequest.builder()
-                .name("report1")
-                .description("some description")
-                .build();
-
-        mockMvc.perform((put("/reports/{id}", UUID.randomUUID())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))))
-                .andExpect(status().isBadRequest());
-        verify(reportService, never()).updateReport(any(), any());
+        verify(reportService, never()).createReport(any(), any());
     }
 
     @Test
     void shouldNotUpdateAReportBlankName() throws Exception {
         var request = UpdateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("")
                 .description("some description")
                 .build();
@@ -257,13 +244,12 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).updateReport(any(), any());
+        verify(reportService, never()).updateReport(any(), any(), any());
     }
 
     @Test
     void shouldNotCreateAReportBlankDescription() throws Exception {
         var request = CreateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("report1")
                 .description("")
                 .build();
@@ -274,13 +260,12 @@ public class ReportControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("description: must not be blank"));
 
-        verify(reportService, never()).createReport(any());
+        verify(reportService, never()).createReport(any(), any());
     }
 
     @Test
     void shouldNotUpdateAReportBlankDescription() throws Exception {
         var request = UpdateReportRequest.builder()
-                .userId(UUID.randomUUID())
                 .name("report1")
                 .description("")
                 .build();
@@ -291,7 +276,7 @@ public class ReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
-        verify(reportService, never()).updateReport(any(), any());
+        verify(reportService, never()).updateReport(any(), any(), any());
     }
 
 }

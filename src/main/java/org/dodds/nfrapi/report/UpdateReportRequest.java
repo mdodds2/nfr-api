@@ -14,9 +14,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateReportRequest {
-    @NotNull
-    private UUID userId;
-
     @NotBlank
     @Size(max=50)
     private String name;

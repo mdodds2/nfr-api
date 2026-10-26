@@ -1,6 +1,7 @@
 package org.dodds.nfrapi.common;
 
 import lombok.extern.slf4j.Slf4j;
+import org.dodds.nfrapi.authentication.InvalidResetTokenException;
 import org.dodds.nfrapi.category.CategoryNotFoundException;
 import org.dodds.nfrapi.category.DuplicateCategoryException;
 import org.dodds.nfrapi.category.DuplicateSubCategoryException;
@@ -101,4 +102,11 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorDto(message));
     }
+
+    @ExceptionHandler(InvalidResetTokenException.class)
+    public ResponseEntity<ErrorDto> handlePasswordResetException(InvalidResetTokenException  ex) {
+        log.warn("Invalid password reset token");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorDto("Something went wrong.  Password Reset has failed"));
+    }
+
 }
