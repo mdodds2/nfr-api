@@ -3,7 +3,6 @@ package org.dodds.nfrapi.users;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dodds.nfrapi.authentication.JwtService;
-import org.dodds.nfrapi.report.ReportService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

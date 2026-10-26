@@ -1,7 +1,6 @@
 package org.dodds.nfrapi.report;
 
 import org.dodds.nfrapi.requirement.*;
-import org.dodds.nfrapi.users.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
