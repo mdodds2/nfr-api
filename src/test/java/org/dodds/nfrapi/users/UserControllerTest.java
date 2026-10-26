@@ -185,7 +185,6 @@ class UserControllerTest {
 
     @Test
     void shouldNotUpdateAUserNoToken() throws Exception {
-        var id = UUID.randomUUID();
         var request = UpdateUserRequest.builder().name("Test User").email("not-an-email").build();
 
         mockMvc.perform(put("/users/me")
