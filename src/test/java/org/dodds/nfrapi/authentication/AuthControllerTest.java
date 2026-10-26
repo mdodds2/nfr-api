@@ -139,12 +139,50 @@ public class AuthControllerTest {
     }
 
     @Test
+    void shouldNotAcceptForgotPasswordBadEmail() throws Exception {
+
+        var request = new ForgotPasswordRequest("not-an-email");
+
+        mockMvc.perform(post("/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(passwordResetService, never()).requestReset(any());
+    }
+
+    @Test
     void shouldResetPassword() throws Exception {
         var request = new ResetPasswordRequest("RAW_TOKEN", "NEW_PASSWORD");
         mockMvc.perform(post("/auth/reset-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
+
+        verify(passwordResetService).resetPassword("RAW_TOKEN", "NEW_PASSWORD");
+    }
+
+    @Test
+    void shouldNotResetPasswordShortPassword() throws Exception {
+        var request = new ResetPasswordRequest("RAW_TOKEN", "NEWP");
+        mockMvc.perform(post("/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(passwordResetService, never()).resetPassword("RAW_TOKEN", "NEW_PASSWORD");
+    }
+
+    @Test
+    void shouldNotResetPasswordBadToken() throws Exception {
+        var request = new ResetPasswordRequest("RAW_TOKEN", "NEW_PASSWORD");
+
+        doThrow(new InvalidResetTokenException()).when(passwordResetService).resetPassword(any(), any());
+
+        mockMvc.perform(post("/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
 
         verify(passwordResetService).resetPassword("RAW_TOKEN", "NEW_PASSWORD");
     }

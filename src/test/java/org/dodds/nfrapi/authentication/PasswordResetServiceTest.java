@@ -3,14 +3,18 @@ package org.dodds.nfrapi.authentication;
 import org.dodds.nfrapi.email.EmailService;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -147,6 +151,17 @@ public class PasswordResetServiceTest {
         assertThrows(InvalidResetTokenException.class, () -> passwordResetService.resetPassword("RAW_TOKEN", "NEW_PASSWORD"));
         verify(userRepository, never()).save(any());
         verify(tokenRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Included for coverage purposes only")
+    void shouldNotResetPasswordAlgorithmNotFound()  {
+        try (MockedStatic<MessageDigest> md = mockStatic(MessageDigest.class)) {
+            md.when(() -> MessageDigest.getInstance("SHA-256"))
+                    .thenThrow(new NoSuchAlgorithmException("boom"));
+            assertThrows(IllegalStateException.class,
+                    () -> passwordResetService.resetPassword("token", "newPassword123"));
+        }
     }
 
 }
