@@ -9,6 +9,9 @@ public interface MeasurementMapper {
 
     MeasurementDto toDto(Measurement measurement);
 
+    @Mapping(target = "report", ignore = true)
+    @Mapping(target = "createdMoment", ignore = true)
+    @Mapping(target = "updatedMoment", ignore = true)
     Measurement toEntity(MeasurementDto measurementDto);
 
 }

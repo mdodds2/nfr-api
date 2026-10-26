@@ -2,6 +2,7 @@ package org.dodds.nfrapi.users;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -259,6 +260,22 @@ public class UserServiceTest {
 
         assertThrows(UserNotFoundException.class, () -> userService.updateUser(id, request));
         verify(userRepository, never()).save(user);
+    }
+
+    @Test
+    void shouldNotUpdateAPassword() {
+        var userId = UUID.randomUUID();
+
+        var user = User.builder().id(userId).email("a@b.com").password("HASH").build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        userService.updateUser(userId, new UpdateUserRequest("New Name", "new@b.com"));
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getPassword()).isEqualTo("HASH");
+        verifyNoInteractions(passwordEncoder);
     }
 
 }

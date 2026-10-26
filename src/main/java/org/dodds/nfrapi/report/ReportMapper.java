@@ -17,6 +17,7 @@ public interface ReportMapper {
     @Mapping(target = "modifiedAt", ignore = true)
     @Mapping(target = "reportRequirements", ignore = true)
     @Mapping(target = "measurements", ignore = true)
+    @Mapping(target = "userId", ignore = true)
     Report toEntity(CreateReportRequest request);
 
     @Mapping(target = "id", ignore = true)
@@ -25,5 +26,6 @@ public interface ReportMapper {
     @Mapping(target = "modifiedAt", ignore = true)
     @Mapping(target = "reportRequirements", ignore = true)
     @Mapping(target = "measurements", ignore = true)
+    @Mapping(target = "userId", ignore = true)
     void update(UpdateReportRequest request, @MappingTarget Report report);
 }

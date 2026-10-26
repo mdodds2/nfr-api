@@ -142,7 +142,7 @@ class UserControllerTest {
     @Test
     void shouldUpdateAUser() throws Exception {
         var id = UUID.randomUUID();
-        var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").password("NEW").build();
+        var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").build();
         var userDto = UserDto.builder().id(id).name("Test User").email("user@example.com").build();
 
         when(userService.updateUser(eq(id), any(UpdateUserRequest.class))).thenReturn(userDto);
@@ -160,7 +160,7 @@ class UserControllerTest {
     @Test
     void shouldNotUpdateAUserNotFound() throws Exception {
         var id = UUID.randomUUID();
-        var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").password("NEW").build();
+        var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").build();
 
         when(userService.updateUser(eq(id), any(UpdateUserRequest.class))).thenThrow(new UserNotFoundException());
 
@@ -169,6 +169,29 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotUpdateAUserBadRequest() throws Exception {
+        var id = UUID.randomUUID();
+        var request = UpdateUserRequest.builder().name("Test User").email("not-an-email").build();
+
+        loginAs(id);
+        mockMvc.perform(put("/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldNotUpdateAUserNoToken() throws Exception {
+        var id = UUID.randomUUID();
+        var request = UpdateUserRequest.builder().name("Test User").email("not-an-email").build();
+
+        mockMvc.perform(put("/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

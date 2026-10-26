@@ -40,8 +40,8 @@ public class UserController {
 
     @PutMapping("/me")
     public UserDto updateUser(
-            @Valid @RequestBody UpdateUserRequest request, @AuthenticationPrincipal UUID userId) {
-
+            @Valid @RequestBody UpdateUserRequest request,
+            @AuthenticationPrincipal UUID userId) {
         return userService.updateUser(userId, request);
     }
 
