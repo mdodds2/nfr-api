@@ -75,21 +75,6 @@ public class ReportService {
         return reportDto;
     }
 
-    public List<ReportDto> getReportsForUser(UUID id, String sortBy) {
-
-        if (sortBy == null || !Set.of("name", "createdAt").contains(sortBy))
-            sortBy = "name";
-
-        String userName = userRepository.findById(id)
-                .map(User::getName)
-                .orElse(null);
-
-        return reportRepository.findAllByUserId(id, Sort.by(sortBy))
-                .stream()
-                .map(r -> { var dto = reportMapper.toDto(r); dto.setUserName(userName); return dto; })
-                .toList();
-    }
-
     @Transactional
     public ReportDto createReport(UUID userId, CreateReportRequest request) {
         if(reportRepository.existsByUserIdAndName(userId, request.getName())) {

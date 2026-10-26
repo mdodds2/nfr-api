@@ -80,6 +80,20 @@ public class ReportControllerTest {
     }
 
     @Test
+    void shouldGetAllReportsForAUser() throws Exception {
+        var reportId = UUID.randomUUID();
+        var userId = UUID.randomUUID();
+        var reportDto = ReportDto.builder().id(reportId).name("Report 1").build();
+
+        when(reportService.getAllReports(eq(userId), any())).thenReturn(List.of(reportDto));
+
+        loginAs(userId);
+        mockMvc.perform((get("/reports")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(reportId.toString()));
+    }
+
+    @Test
     void shouldNotGetAReportNotFound() throws Exception {
         var reportId = UUID.randomUUID();
         var userId = UUID.randomUUID();

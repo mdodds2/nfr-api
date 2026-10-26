@@ -104,37 +104,6 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldGetReportsForAUser() throws Exception {
-        var id = UUID.randomUUID();
-        var report1 = ReportDto.builder().id(UUID.randomUUID()).name("Report1").build();
-        var report2 = ReportDto.builder().id(UUID.randomUUID()).name("Report2").build();
-
-        when(reportService.getReportsForUser(id, "name")).thenReturn(List.of(report1, report2));
-
-        loginAs(id);
-        mockMvc.perform(get("/users/me/reports").param("sort", "name"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(report1.getId().toString()));
-
-        verify(reportService).getReportsForUser(id, "name");
-    }
-
-    @Test
-    void shouldGetReportsForUserWithDefaultSort() throws Exception {
-        var id = UUID.randomUUID();
-        var report = ReportDto.builder().id(UUID.randomUUID()).build();
-
-        when(reportService.getReportsForUser(id, "createdAt")).thenReturn(List.of(report));
-
-        loginAs(id);
-        mockMvc.perform(get("/users/me/reports"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(report.getId().toString()));
-
-        verify(reportService).getReportsForUser(id, "createdAt");
-    }
-
-    @Test
     void shouldCreateAUser() throws Exception {
         var userId = UUID.randomUUID();
         var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED1").build();

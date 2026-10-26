@@ -33,13 +33,6 @@ public class UserController {
         return userService.getUser(userId);
     }
 
-    @GetMapping("/me/reports")
-    public Iterable<ReportDto> getReportsForUser(
-            @RequestParam(required = false, defaultValue = "createdAt", name = "sort") String sortBy,
-            @AuthenticationPrincipal UUID userId) {
-        return reportService.getReportsForUser(userId, sortBy);
-    }
-
     @PostMapping
     public ResponseEntity<?> registerUser(
             @Valid
