@@ -2,8 +2,6 @@ package org.dodds.nfrapi.report;
 
 import lombok.AllArgsConstructor;
 import org.dodds.nfrapi.requirement.*;
-import org.dodds.nfrapi.users.User;
-import org.dodds.nfrapi.users.UserNotFoundException;
 import org.dodds.nfrapi.users.UserRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -67,9 +65,9 @@ public class ReportService {
         reportDto.setRequirements(requirementDtos);
 
         var measurementDtos = new ArrayList<MeasurementDto>();
-        report.getMeasurements().forEach(measurement -> {
+        for (Measurement measurement : report.getMeasurements()) {
             measurementDtos.add(measurementMapper.toDto(measurement));
-        });
+        }
         reportDto.setMeasurements(measurementDtos);
 
         return reportDto;
@@ -105,9 +103,9 @@ public class ReportService {
 
         var reportDto = reportMapper.toDto(report);
         List<RequirementDto> requirementDtos = new ArrayList<>();
-        requirementList.forEach(requirement -> {
+        for (Requirement requirement : requirementList) {
             requirementDtos.add(requirementMapper.toDto(requirement));
-        });
+        }
         reportDto.setRequirements(requirementDtos);
         return reportDto;
     }

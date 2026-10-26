@@ -3,7 +3,6 @@ package org.dodds.nfrapi.users;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.dodds.nfrapi.report.ReportDto;
 import org.dodds.nfrapi.report.ReportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,8 +18,6 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-    private final ReportService reportService;
-
 
     @GetMapping
     public Iterable<UserDto> getAllUsers(

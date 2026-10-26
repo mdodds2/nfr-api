@@ -1,7 +1,6 @@
 package org.dodds.nfrapi.report;
 
 import org.dodds.nfrapi.requirement.*;
-import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,9 +22,6 @@ class ReportServiceTest {
 
     @Mock
     ReportRepository reportRepository;
-
-    @Mock
-    UserRepository userRepository;
 
     @Mock
     RequirementRepository requirementRepository;
