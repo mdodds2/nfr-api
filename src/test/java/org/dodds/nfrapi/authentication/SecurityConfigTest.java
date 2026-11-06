@@ -26,8 +26,8 @@ class SecurityConfigTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    void shouldReturn403ForReportsWhenNotAdmin() throws Exception {
-        mockMvc.perform(get("/reports")).andExpect(status().isForbidden());
+    void shouldReturn200ForReportsWhenNotAdmin() throws Exception {
+        mockMvc.perform(get("/reports")).andExpect(status().isOk());
     }
 
     @Test

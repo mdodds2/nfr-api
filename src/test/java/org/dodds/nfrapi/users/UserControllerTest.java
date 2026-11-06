@@ -3,8 +3,6 @@ package org.dodds.nfrapi.users;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dodds.nfrapi.authentication.JwtService;
-import org.dodds.nfrapi.report.ReportDto;
-import org.dodds.nfrapi.report.ReportService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +36,6 @@ class UserControllerTest {
 
     @Autowired
     ObjectMapper objectMapper;
-
-    @MockitoBean
-    ReportService reportService;
 
     @MockitoBean
     UserService userService;
@@ -104,37 +99,6 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldGetReportsForAUser() throws Exception {
-        var id = UUID.randomUUID();
-        var report1 = ReportDto.builder().id(UUID.randomUUID()).name("Report1").build();
-        var report2 = ReportDto.builder().id(UUID.randomUUID()).name("Report2").build();
-
-        when(reportService.getReportsForUser(id, "name")).thenReturn(List.of(report1, report2));
-
-        loginAs(id);
-        mockMvc.perform(get("/users/me/reports").param("sort", "name"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(report1.getId().toString()));
-
-        verify(reportService).getReportsForUser(id, "name");
-    }
-
-    @Test
-    void shouldGetReportsForUserWithDefaultSort() throws Exception {
-        var id = UUID.randomUUID();
-        var report = ReportDto.builder().id(UUID.randomUUID()).build();
-
-        when(reportService.getReportsForUser(id, "createdAt")).thenReturn(List.of(report));
-
-        loginAs(id);
-        mockMvc.perform(get("/users/me/reports"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(report.getId().toString()));
-
-        verify(reportService).getReportsForUser(id, "createdAt");
-    }
-
-    @Test
     void shouldCreateAUser() throws Exception {
         var userId = UUID.randomUUID();
         var request = RegisterUserRequest.builder().name("Test User").email("user@example.com").password("ENCODED1").build();
@@ -178,7 +142,7 @@ class UserControllerTest {
     @Test
     void shouldUpdateAUser() throws Exception {
         var id = UUID.randomUUID();
-        var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").password("NEW").build();
+        var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").build();
         var userDto = UserDto.builder().id(id).name("Test User").email("user@example.com").build();
 
         when(userService.updateUser(eq(id), any(UpdateUserRequest.class))).thenReturn(userDto);
@@ -196,7 +160,7 @@ class UserControllerTest {
     @Test
     void shouldNotUpdateAUserNotFound() throws Exception {
         var id = UUID.randomUUID();
-        var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").password("NEW").build();
+        var request = UpdateUserRequest.builder().name("Test User").email("user@example.com").build();
 
         when(userService.updateUser(eq(id), any(UpdateUserRequest.class))).thenThrow(new UserNotFoundException());
 
@@ -205,6 +169,40 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotUpdateAUserBadRequest() throws Exception {
+        var id = UUID.randomUUID();
+        var request = UpdateUserRequest.builder().name("Test User").email("not-an-email").build();
+
+        loginAs(id);
+        mockMvc.perform(put("/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldNotUpdateAUserNoToken() throws Exception {
+        var request = UpdateUserRequest.builder().name("Test User").email("not-an-email").build();
+
+        mockMvc.perform(put("/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldNotUpdateAUserDuplicateEmail() throws Exception {
+        var request = UpdateUserRequest.builder().name("Test User").email("user@domain.com").build();
+
+        when(userService.updateUser(any(), any())).thenThrow(new DuplicateEmailException());
+
+        mockMvc.perform(put("/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
     }
 
     @Test

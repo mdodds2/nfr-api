@@ -1,7 +1,6 @@
 package org.dodds.nfrapi.report;
 
 import org.dodds.nfrapi.requirement.*;
-import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,9 +24,6 @@ class ReportServiceTest {
     ReportRepository reportRepository;
 
     @Mock
-    UserRepository userRepository;
-
-    @Mock
     RequirementRepository requirementRepository;
 
     @Mock
@@ -38,6 +34,9 @@ class ReportServiceTest {
 
     @Mock
     MeasurementMapper measurementMapper;
+
+    @Mock
+    UserRepository userRepository;
 
     @InjectMocks
     ReportService reportService;
@@ -151,134 +150,6 @@ class ReportServiceTest {
 
         // Assert
         assertThrows(ReportNotFoundException.class, () -> reportService.getReport(reportId, userId));
-    }
-
-    @DisplayName("Get report - for user")
-    @Test
-    void getReportForUser() {
-        // Arrange
-        UUID userid = UUID.randomUUID();
-        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
-        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
-        var report = Report.builder()
-                .id(UUID.randomUUID())
-                .name("report")
-                .reportRequirements(List.of(requirement))
-                .measurements(Set.of(measurement))
-                .build();
-        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
-
-        var user = User.builder()
-                 .id(UUID.randomUUID())
-                 .name("Test User")
-                 .build();
-
-        when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
-        when(reportMapper.toDto(report)).thenReturn(reportDto);
-        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
-
-        // Act
-        var result = reportService.getReportsForUser(userid, "name");
-
-        // Assert
-        assertThat(result).containsExactly(reportDto);
-        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
-    }
-
-    @DisplayName("Get report - for user sorted by createdAt")
-    @Test
-    void getReportForUserSortedByDate() {
-        // Arrange
-        UUID userid = UUID.randomUUID();
-        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
-        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
-        var report = Report.builder()
-                .id(UUID.randomUUID())
-                .name("report")
-                .reportRequirements(List.of(requirement))
-                .measurements(Set.of(measurement))
-                .build();
-        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
-
-        var user = User.builder()
-                .id(UUID.randomUUID())
-                .name("Test User")
-                .build();
-
-        when(reportRepository.findAllByUserId(userid, Sort.by("createdAt"))).thenReturn(List.of(report));
-        when(reportMapper.toDto(report)).thenReturn(reportDto);
-        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
-
-        // Act
-        var result = reportService.getReportsForUser(userid, "createdAt");
-
-        // Assert
-        assertThat(result).containsExactly(reportDto);
-        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
-    }
-
-    @DisplayName("Get report - for user sorted by other")
-    @Test
-    void getReportForUserSortedByOther() {
-        // Arrange
-        UUID userid = UUID.randomUUID();
-        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
-        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
-        var report = Report.builder()
-                .id(UUID.randomUUID())
-                .name("report")
-                .reportRequirements(List.of(requirement))
-                .measurements(Set.of(measurement))
-                .build();
-        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
-
-        var user = User.builder()
-                .id(UUID.randomUUID())
-                .name("Test User")
-                .build();
-
-        when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
-        when(reportMapper.toDto(report)).thenReturn(reportDto);
-        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
-
-        // Act
-        var result = reportService.getReportsForUser(userid, "other");
-
-        // Assert
-        assertThat(result).containsExactly(reportDto);
-        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
-    }
-
-    @DisplayName("Get report - for user sorted by null")
-    @Test
-    void getReportForUserSortedByNull() {
-        // Arrange
-        UUID userid = UUID.randomUUID();
-        var requirement = Requirement.builder().id(UUID.randomUUID()).build();
-        var measurement = Measurement.builder().id(UUID.randomUUID()).build();
-        var report = Report.builder()
-                .id(UUID.randomUUID())
-                .name("report")
-                .reportRequirements(List.of(requirement))
-                .measurements(Set.of(measurement))
-                .build();
-        var reportDto = ReportDto.builder().id(report.getId()).name("report").build();
-
-        var user = User.builder()
-                .id(UUID.randomUUID())
-                .name("Test User")
-                .build();
-
-        when(reportRepository.findAllByUserId(userid, Sort.by("name"))).thenReturn(List.of(report));
-        when(reportMapper.toDto(report)).thenReturn(reportDto);
-        when(userRepository.findById(userid)).thenReturn(Optional.of(user));
-
-        // Act
-        var result = reportService.getReportsForUser(userid, null);
-
-        // Assert
-        assertThat(result).containsExactly(reportDto);
-        assertThat(result.get(0).getUserName()).isEqualTo(user.getName());
     }
 
     @DisplayName("Create report with an unknown requirement id")

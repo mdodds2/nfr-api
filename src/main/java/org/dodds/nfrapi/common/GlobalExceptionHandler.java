@@ -10,6 +10,7 @@ import org.dodds.nfrapi.report.DuplicateReportException;
 import org.dodds.nfrapi.report.ReportNotFoundException;
 import org.dodds.nfrapi.requirement.DuplicateRequirementException;
 import org.dodds.nfrapi.requirement.RequirementNotFoundException;
+import org.dodds.nfrapi.users.DuplicateEmailException;
 import org.dodds.nfrapi.users.DuplicateUserException;
 import org.dodds.nfrapi.users.UserNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -79,6 +80,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateUserException.class)
     public ResponseEntity<ErrorDto> handleDuplicateUser(DuplicateUserException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ErrorDto> handleDuplicateEmail(DuplicateEmailException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
     }
 

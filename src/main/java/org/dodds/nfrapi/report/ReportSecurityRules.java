@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class ReportSecurityRules implements SecurityRules{
     @Override
     public void configure(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry registry) {
-        registry.requestMatchers(HttpMethod.GET, "/reports").hasRole("ADMIN");
-        registry.requestMatchers(HttpMethod.GET, "/error").permitAll();
+        registry.requestMatchers(HttpMethod.GET, "/reports").authenticated();
+        registry.requestMatchers("/error").permitAll();
     }
 }

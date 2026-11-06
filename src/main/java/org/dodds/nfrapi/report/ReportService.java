@@ -2,8 +2,6 @@ package org.dodds.nfrapi.report;
 
 import lombok.AllArgsConstructor;
 import org.dodds.nfrapi.requirement.*;
-import org.dodds.nfrapi.users.User;
-import org.dodds.nfrapi.users.UserNotFoundException;
 import org.dodds.nfrapi.users.UserRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -67,27 +65,12 @@ public class ReportService {
         reportDto.setRequirements(requirementDtos);
 
         var measurementDtos = new ArrayList<MeasurementDto>();
-        report.getMeasurements().forEach(measurement -> {
+        for (Measurement measurement : report.getMeasurements()) {
             measurementDtos.add(measurementMapper.toDto(measurement));
-        });
+        }
         reportDto.setMeasurements(measurementDtos);
 
         return reportDto;
-    }
-
-    public List<ReportDto> getReportsForUser(UUID id, String sortBy) {
-
-        if (sortBy == null || !Set.of("name", "createdAt").contains(sortBy))
-            sortBy = "name";
-
-        String userName = userRepository.findById(id)
-                .map(User::getName)
-                .orElse(null);
-
-        return reportRepository.findAllByUserId(id, Sort.by(sortBy))
-                .stream()
-                .map(r -> { var dto = reportMapper.toDto(r); dto.setUserName(userName); return dto; })
-                .toList();
     }
 
     @Transactional
@@ -120,9 +103,9 @@ public class ReportService {
 
         var reportDto = reportMapper.toDto(report);
         List<RequirementDto> requirementDtos = new ArrayList<>();
-        requirementList.forEach(requirement -> {
+        for (Requirement requirement : requirementList) {
             requirementDtos.add(requirementMapper.toDto(requirement));
-        });
+        }
         reportDto.setRequirements(requirementDtos);
         return reportDto;
     }
