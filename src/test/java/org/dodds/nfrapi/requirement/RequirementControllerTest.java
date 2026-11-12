@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -80,9 +81,6 @@ public class RequirementControllerTest {
     void shouldNotReturnRequirementsForSubCategoryNotFound() throws Exception {
 
         var subCategoryId = UUID.randomUUID();
-        var req1 = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 1").build();
-        var req2 = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 2").build();
-        var req3 = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 3").build();
 
         when(requirementService.getRequirementsBySubCategory(eq(subCategoryId), any())).thenThrow(new SubCategoryNotFoundException());
 
@@ -229,6 +227,17 @@ public class RequirementControllerTest {
 
         mockMvc.perform(delete("/requirements/{id}", id))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotDeleteRequirementUsedByReports() throws Exception {
+        var id = UUID.randomUUID();
+
+        doThrow(new RequirementInUseException()).when(requirementService).deleteRequirement(id);
+
+        mockMvc.perform(delete("/requirements/{id}", id))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value(containsString("in use by existing reports")));
     }
 
 }

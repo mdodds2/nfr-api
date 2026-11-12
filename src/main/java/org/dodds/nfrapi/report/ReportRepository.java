@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface ReportRepository extends JpaRepository<Report, UUID> {
     boolean existsByUserIdAndName(UUID userId, String name);
     List<Report> findAllByUserId(UUID userId, Sort sortBy);
+    boolean existsByReportRequirementsId(UUID requirementId);
 }

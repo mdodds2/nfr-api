@@ -4,6 +4,7 @@ import org.dodds.nfrapi.category.*;
 
 import org.dodds.nfrapi.common.Priority;
 import org.dodds.nfrapi.common.Status;
+import org.dodds.nfrapi.report.ReportRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +23,9 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RequirementServiceTest {
+
+    @Mock
+    ReportRepository reportRepository;
 
     @Mock
     CategoryRepository categoryRepository;
@@ -274,8 +278,6 @@ class RequirementServiceTest {
     @Test
     void shouldNotCreateARequirementAndThrowAnException() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-
         CreateRequirementRequest request = CreateRequirementRequest.builder()
                 .subCategoryId(UUID.randomUUID())
                 .identifier("test requirement identifier")
@@ -413,7 +415,6 @@ class RequirementServiceTest {
     void shouldNotUpdateARequirementAndThrowAnException() {
         // Arrange
         UUID uuid = UUID.randomUUID();
-        UUID subCategoryId = UUID.randomUUID();
         UpdateRequirementRequest request = UpdateRequirementRequest.builder()
                 .identifier("test requirement identifier")
                 .title("test requirement title")
@@ -440,21 +441,8 @@ class RequirementServiceTest {
         // Arrange
         UUID uuid = UUID.randomUUID();
 
-        Requirement mockRequirement = Requirement.builder()
-                .id(uuid)
-                .identifier("test requirement identifier")
-                .title("test requirement title")
-                .description("test requirement description")
-                .priority(Priority.LOW)
-                .status(Status.APPROVED)
-                .rationale("rationale")
-                .source("source")
-                .riskIfViolated("riskIfViolated")
-                .build();
-
-        when(requirementRepository.findById(uuid)).thenReturn(Optional.of(mockRequirement));
-
         // Act
+        when(requirementRepository.existsById(uuid)).thenReturn(true);
         requirementService.deleteRequirement(uuid);
 
         // Assert
@@ -467,8 +455,21 @@ class RequirementServiceTest {
         UUID uuid = UUID.randomUUID();
 
         // Act / Assert
-        when(requirementRepository.findById(uuid)).thenReturn(Optional.empty());
+        when(requirementRepository.existsById(uuid)).thenReturn(false);
         assertThrows(RequirementNotFoundException.class, () -> requirementService.deleteRequirement(uuid));
+        verify(requirementRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void shouldNotDeleteRequirementUsedByReports() {
+        // Arrange
+        UUID uuid = UUID.randomUUID();
+
+        // Act / Assert
+        when(requirementRepository.existsById(uuid)).thenReturn(true);
+        when(reportRepository.existsByReportRequirementsId(uuid)).thenReturn(true);
+        var ex = assertThrows(RequirementInUseException.class, () -> requirementService.deleteRequirement(uuid));
+        assertThat(ex.getMessage()).contains("in use by existing reports");
         verify(requirementRepository, never()).deleteById(any());
     }
 
