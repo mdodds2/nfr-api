@@ -278,8 +278,6 @@ class RequirementServiceTest {
     @Test
     void shouldNotCreateARequirementAndThrowAnException() {
         // Arrange
-        UUID uuid = UUID.randomUUID();
-
         CreateRequirementRequest request = CreateRequirementRequest.builder()
                 .subCategoryId(UUID.randomUUID())
                 .identifier("test requirement identifier")
@@ -417,7 +415,6 @@ class RequirementServiceTest {
     void shouldNotUpdateARequirementAndThrowAnException() {
         // Arrange
         UUID uuid = UUID.randomUUID();
-        UUID subCategoryId = UUID.randomUUID();
         UpdateRequirementRequest request = UpdateRequirementRequest.builder()
                 .identifier("test requirement identifier")
                 .title("test requirement title")
