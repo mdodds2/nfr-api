@@ -5,6 +5,7 @@ import org.dodds.nfrapi.category.CategoryNotFoundException;
 import org.dodds.nfrapi.category.CategoryRepository;
 import org.dodds.nfrapi.category.SubCategoryNotFoundException;
 import org.dodds.nfrapi.category.SubCategoryRepository;
+import org.dodds.nfrapi.report.ReportRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Service
 public class RequirementService {
-
+    private final ReportRepository reportRepository;
     private final RequirementRepository requirementRepository;
     private final CategoryRepository categoryRepository;
     private final SubCategoryRepository subCategoryRepository;
@@ -68,7 +69,10 @@ public class RequirementService {
     }
 
     public void deleteRequirement(UUID id) {
-        var requirement = requirementRepository.findById(id).orElseThrow(RequirementNotFoundException::new);
+        if(! requirementRepository.existsById(id))
+            throw new RequirementNotFoundException();
+        if(reportRepository.existsByReportRequirementsId(id))
+            throw new RequirementInUseException();
         requirementRepository.deleteById(id);
     }
 

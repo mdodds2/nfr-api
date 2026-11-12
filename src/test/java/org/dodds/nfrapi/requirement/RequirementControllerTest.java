@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -229,6 +230,17 @@ public class RequirementControllerTest {
 
         mockMvc.perform(delete("/requirements/{id}", id))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotDeleteRequirementUsedByReports() throws Exception {
+        var id = UUID.randomUUID();
+
+        doThrow(new RequirementInUseException()).when(requirementService).deleteRequirement(id);
+
+        mockMvc.perform(delete("/requirements/{id}", id))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value(containsString("in use by existing reports")));
     }
 
 }

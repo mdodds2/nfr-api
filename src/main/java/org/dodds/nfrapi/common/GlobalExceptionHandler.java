@@ -9,6 +9,7 @@ import org.dodds.nfrapi.category.SubCategoryNotFoundException;
 import org.dodds.nfrapi.report.DuplicateReportException;
 import org.dodds.nfrapi.report.ReportNotFoundException;
 import org.dodds.nfrapi.requirement.DuplicateRequirementException;
+import org.dodds.nfrapi.requirement.RequirementInUseException;
 import org.dodds.nfrapi.requirement.RequirementNotFoundException;
 import org.dodds.nfrapi.users.DuplicateEmailException;
 import org.dodds.nfrapi.users.DuplicateUserException;
@@ -51,6 +52,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RequirementNotFoundException.class)
     public ResponseEntity<ErrorDto> handleRequirementNotFound(RequirementNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(RequirementInUseException.class)
+    public ResponseEntity<ErrorDto> handleRequirementInUse(RequirementInUseException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorDto(ex.getMessage()));
     }
 
     @ExceptionHandler(UserNotFoundException.class)
