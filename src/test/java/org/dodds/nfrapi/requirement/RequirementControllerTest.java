@@ -81,9 +81,6 @@ public class RequirementControllerTest {
     void shouldNotReturnRequirementsForSubCategoryNotFound() throws Exception {
 
         var subCategoryId = UUID.randomUUID();
-        var req1 = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 1").build();
-        var req2 = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 2").build();
-        var req3 = RequirementDto.builder().id(UUID.randomUUID()).title("Requirement 3").build();
 
         when(requirementService.getRequirementsBySubCategory(eq(subCategoryId), any())).thenThrow(new SubCategoryNotFoundException());
 
