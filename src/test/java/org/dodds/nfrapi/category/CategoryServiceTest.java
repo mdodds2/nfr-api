@@ -476,7 +476,6 @@ public class CategoryServiceTest {
         var categoryId = UUID.randomUUID();
         var subCategoryId = UUID.randomUUID();
         var category = Category.builder().id(categoryId).build();
-        var subCategory = SubCategory.builder().id(categoryId).build();
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         when(subCategoryRepository.findByIdAndCategoryId(subCategoryId,categoryId)).thenReturn(null);
