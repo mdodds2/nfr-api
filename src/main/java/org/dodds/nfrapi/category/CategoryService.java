@@ -101,7 +101,7 @@ public class CategoryService {
 
     @Transactional
     public SubCategoryDto updateSubCategory(UUID id, UUID categoryId, UpdateSubCategoryRequest request) {
-        var category = categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
+        categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
         var subCategory = subCategoryRepository.findByIdAndCategoryId(id, categoryId);
         if(subCategory == null)
             throw new SubCategoryNotFoundException();
@@ -112,7 +112,7 @@ public class CategoryService {
 
     @Transactional
     public void deleteSubCategory(UUID id, UUID categoryId) {
-        var category = categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
+        categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
         var subCategory = subCategoryRepository.findByIdAndCategoryId(id, categoryId);
         if(subCategory == null) throw new SubCategoryNotFoundException();
         subCategoryRepository.delete(subCategory);
