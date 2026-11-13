@@ -11,6 +11,7 @@ import java.util.*;
 
 @AllArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class ReportService {
 
     private final ReportRepository reportRepository;
@@ -110,6 +111,7 @@ public class ReportService {
         return reportDto;
     }
 
+    @Transactional
     public ReportDto updateReport(UUID reportId, UUID userId, UpdateReportRequest request) {
         var report = reportRepository.findById(reportId)
             .filter(r -> r.getUserId().equals(userId))
@@ -135,6 +137,7 @@ public class ReportService {
         return reportMapper.toDto(report);
     }
 
+    @Transactional
     public void deleteReport(UUID id, UUID userId) {
         var report = reportRepository.findById(id)
                 .filter(r -> r.getUserId().equals(userId))
