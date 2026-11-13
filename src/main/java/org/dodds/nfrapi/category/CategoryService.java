@@ -3,6 +3,7 @@ package org.dodds.nfrapi.category;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
@@ -42,6 +44,7 @@ public class CategoryService {
         return categoryDto;
     }
 
+    @Transactional
     public CategoryDto createCategory(CreateCategoryRequest request) {
         if(categoryRepository.existsByName(request.name())) {
             throw new DuplicateCategoryException();
@@ -52,6 +55,7 @@ public class CategoryService {
         return categoryMapper.toDto(category);
     }
 
+    @Transactional
     public CategoryDto updateCategory(UUID id, UpdateCategoryRequest request) {
         var category = categoryRepository.findById(id).orElseThrow(CategoryNotFoundException::new);
         categoryMapper.update(request, category);
@@ -59,6 +63,7 @@ public class CategoryService {
         return categoryMapper.toDto(category);
     }
 
+    @Transactional
     public void deleteCategory(UUID id) {
         var category = categoryRepository.findById(id).orElseThrow(CategoryNotFoundException::new);
         categoryRepository.delete(category);
@@ -79,6 +84,7 @@ public class CategoryService {
         return categoryMapper.toDto(subCategory);
     }
 
+    @Transactional
     public SubCategoryDto createSubCategory(UUID id, CreateSubCategoryRequest request) {
         var category = categoryRepository.findById(id).orElseThrow(CategoryNotFoundException::new);
 
@@ -93,6 +99,7 @@ public class CategoryService {
         return categoryMapper.toDto(subCategory);
     }
 
+    @Transactional
     public SubCategoryDto updateSubCategory(UUID id, UUID categoryId, UpdateSubCategoryRequest request) {
         var category = categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
         var subCategory = subCategoryRepository.findByIdAndCategoryId(id, categoryId);
@@ -103,6 +110,7 @@ public class CategoryService {
         return categoryMapper.toDto(subCategory);
     }
 
+    @Transactional
     public void deleteSubCategory(UUID id, UUID categoryId) {
         var category = categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
         var subCategory = subCategoryRepository.findByIdAndCategoryId(id, categoryId);

@@ -8,6 +8,7 @@ import org.dodds.nfrapi.category.SubCategoryRepository;
 import org.dodds.nfrapi.report.ReportRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class RequirementService {
     private final ReportRepository reportRepository;
     private final RequirementRepository requirementRepository;
@@ -49,6 +51,7 @@ public class RequirementService {
         return list;
     }
 
+    @Transactional
     public RequirementDto createRequirement(CreateRequirementRequest request) {
         if(requirementRepository.existsByIdentifier(request.getIdentifier()))
             throw new DuplicateRequirementException();
@@ -61,6 +64,7 @@ public class RequirementService {
         return requirementMapper.toDto(requirement);
     }
 
+    @Transactional
     public RequirementDto updateRequirement(UUID id, UpdateRequirementRequest request) {
         var requirement = requirementRepository.findById(id).orElseThrow(RequirementNotFoundException::new);
         requirementMapper.update(request, requirement);
@@ -68,6 +72,7 @@ public class RequirementService {
         return requirementMapper.toDto(requirement);
     }
 
+    @Transactional
     public void deleteRequirement(UUID id) {
         if(! requirementRepository.existsById(id))
             throw new RequirementNotFoundException();

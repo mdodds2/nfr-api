@@ -5,12 +5,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
 @Service
+@Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -36,6 +38,7 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    @Transactional
     public UserDto registerUser(RegisterUserRequest request) {
         if(userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateUserException();
@@ -49,6 +52,7 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    @Transactional
     public UserDto updateUser(UUID id, UpdateUserRequest request) {
         var user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
 
@@ -61,11 +65,13 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    @Transactional
     public void deleteUser(UUID id) {
         var user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
         userRepository.delete(user);
     }
 
+    @Transactional
     public void changePassword(UUID id, ChangePasswordRequest request) {
         var user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
 
