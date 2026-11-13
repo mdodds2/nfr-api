@@ -320,6 +320,7 @@ public class CategoryServiceTest {
         assertThat(result).isEqualTo(subCategoryDto);
         assertThat(subCategory.getActive()).isTrue();
         assertThat(subCategory.getCategory()).isEqualTo(category);
+        assertThat(subCategory.getNextSequence()).isEqualTo(1);
         verify(subCategoryRepository).saveAndFlush(subCategory);
     }
 

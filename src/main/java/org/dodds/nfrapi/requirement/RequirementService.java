@@ -53,13 +53,12 @@ public class RequirementService {
 
     @Transactional
     public RequirementDto createRequirement(CreateRequirementRequest request) {
-        if(requirementRepository.existsByIdentifier(request.getIdentifier()))
-            throw new DuplicateRequirementException();
-
         var requirement = requirementMapper.toEntityFromCreateRequirementRequest(request);
-        var subCategory = subCategoryRepository.findById(request.getSubCategoryId()).orElseThrow(SubCategoryNotFoundException::new);
+        var subCategory = subCategoryRepository.findByIdForUpdate(request.getSubCategoryId()).orElseThrow(SubCategoryNotFoundException::new);
         requirement.setSubCategory(subCategory);
-
+        int n = subCategory.getNextSequence();
+        requirement.setIdentifier(subCategory.getCategory().getShortName() + "-" + subCategory.getShortName() + "-" + n);
+        subCategory.setNextSequence(n + 1);   // dirty checking flushes it
         requirementRepository.saveAndFlush(requirement);
         return requirementMapper.toDto(requirement);
     }
@@ -84,9 +83,7 @@ public class RequirementService {
     public NextIdentifierDto getNextIdentifier(UUID categoryId, UUID subCategoryId) {
         var category = categoryRepository.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
         var subCategory = subCategoryRepository.findById(subCategoryId).orElseThrow(SubCategoryNotFoundException::new);
-        var count = requirementRepository.countBySubCategoryId(subCategoryId);
-
-        return new  NextIdentifierDto(category.getShortName() + '-' + subCategory.getShortName() + '-' + (count + 1));
+        return new  NextIdentifierDto(category.getShortName() + '-' + subCategory.getShortName() + '-' + subCategory.getNextSequence());
     }
 
 }

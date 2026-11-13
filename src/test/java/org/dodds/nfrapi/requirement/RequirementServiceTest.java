@@ -209,11 +209,12 @@ class RequirementServiceTest {
                 .description("test subCategory description")
                 .sortOrder(1)
                 .active(true)
+                .category(Category.builder().shortName("CAT").build())
+                .nextSequence(3)
                 .build();
 
         CreateRequirementRequest request = CreateRequirementRequest.builder()
                 .subCategoryId(subCategory.getId())
-                .identifier("test requirement identifier")
                 .title("test requirement title")
                 .description("test requirement description")
                 .priority(Priority.LOW)
@@ -255,8 +256,7 @@ class RequirementServiceTest {
                 .build();
 
         // Act
-        when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(false);
-        when(subCategoryRepository.findById(request.getSubCategoryId())).thenReturn(Optional.of(subCategory));
+        when(subCategoryRepository.findByIdForUpdate(request.getSubCategoryId())).thenReturn(Optional.of(subCategory));
         when(requirementMapper.toEntityFromCreateRequirementRequest(request)).thenReturn(mockRequirement);
         when(requirementMapper.toDto(mockRequirement)).thenReturn(mockDto);
         RequirementDto result = requirementService.createRequirement(request);
@@ -264,7 +264,6 @@ class RequirementServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(result.getSubCategoryId(), request.getSubCategoryId());
-        assertEquals(result.getIdentifier(), request.getIdentifier());
         assertEquals(result.getTitle(), request.getTitle());
         assertEquals(result.getDescription(), request.getDescription());
         assertEquals(result.getPriority(), request.getPriority());
@@ -272,32 +271,10 @@ class RequirementServiceTest {
         assertEquals(result.getRationale(), request.getRationale());
         assertEquals(result.getSource(), request.getSource());
         assertEquals(result.getRiskIfViolated(), request.getRiskIfViolated());
+
+        assertThat(mockRequirement.getIdentifier()).isEqualTo("CAT-shortName-3");
+        assertThat(subCategory.getNextSequence()).isEqualTo(4);
         verify(requirementRepository).saveAndFlush(mockRequirement);
-    }
-
-    @Test
-    void shouldNotCreateARequirementAndThrowAnException() {
-        // Arrange
-        CreateRequirementRequest request = CreateRequirementRequest.builder()
-                .subCategoryId(UUID.randomUUID())
-                .identifier("test requirement identifier")
-                .title("test requirement title")
-                .description("test requirement description")
-                .priority(Priority.LOW)
-                .status(Status.APPROVED)
-                .targetValue("value")
-                .thresholdValue("threshold")
-                .unit("unit")
-                .measurementMethod("measurementMethod")
-                .rationale("rationale")
-                .source("source")
-                .riskIfViolated("riskIfViolated")
-                .build();
-
-        // Act / Assert
-        when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(true);
-        assertThrows(DuplicateRequirementException.class, () -> requirementService.createRequirement(request));
-        verify(requirementRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -343,8 +320,7 @@ class RequirementServiceTest {
         mockRequirement.setSubCategory(subCategory);
 
         // Act / Assert
-        when(requirementRepository.existsByIdentifier(request.getIdentifier())).thenReturn(false);
-        when(subCategoryRepository.findById(mockRequirement.getSubCategory().getId())).thenReturn(Optional.empty());
+        when(subCategoryRepository.findByIdForUpdate(mockRequirement.getSubCategory().getId())).thenReturn(Optional.empty());
         assertThrows(SubCategoryNotFoundException.class, () -> requirementService.createRequirement(request));
         verify(requirementRepository, never()).saveAndFlush(any());
     }
@@ -479,15 +455,14 @@ class RequirementServiceTest {
         Category category = Category.builder().id(categoryId).shortName("catShortName").build();
 
         var subCategoryId = UUID.randomUUID();
-        var subCategory = SubCategory.builder().id(UUID.randomUUID()).shortName("subCatShortName").build();
+        var subCategory = SubCategory.builder().id(subCategoryId).shortName("subCatShortName").nextSequence(5).build();
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
         when(subCategoryRepository.findById(subCategoryId)).thenReturn(Optional.of(subCategory));
-        when(requirementRepository.countBySubCategoryId(subCategoryId)).thenReturn(0);
 
         var result = requirementService.getNextIdentifier(categoryId, subCategoryId);
 
         assertThat(result).isNotNull();
-        assertThat(result.getIdentifier()).isEqualTo("catShortName-subCatShortName-1");
+        assertThat(result.getIdentifier()).isEqualTo("catShortName-subCatShortName-5");
     }
 }

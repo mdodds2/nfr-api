@@ -38,6 +38,10 @@ public class SubCategory {
     @Column(name = "is_active", insertable = false, nullable = false)
     private Boolean active;
 
+    @Builder.Default
+    @Column(name = "next_sequence", nullable = false)
+    private int nextSequence = 1;
+
     @GeneratedColumn(value = "CURRENT_TIMESTAMP")
     @Column(name = "created_at", insertable = false, updatable = false, nullable = false)
     private LocalDateTime createdAt;
