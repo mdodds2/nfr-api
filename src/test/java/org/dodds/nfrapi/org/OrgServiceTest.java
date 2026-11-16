@@ -1,6 +1,5 @@
 package org.dodds.nfrapi.org;
 
-import org.dodds.nfrapi.users.Role;
 import org.dodds.nfrapi.users.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
