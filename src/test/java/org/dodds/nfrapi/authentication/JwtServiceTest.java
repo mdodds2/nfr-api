@@ -33,6 +33,11 @@ class JwtServiceTest {
                 .email("mike@example.com")
                 .role(Role.USER)               // use one of your real Role values
                 .build();
+
+        membership = OrgMembership.builder()
+                .organization(Organization.builder().id(UUID.randomUUID()).build())
+                .orgRole(null)
+                .build();
     }
 
     @Test
