@@ -6,6 +6,7 @@ import org.dodds.nfrapi.category.CategoryNotFoundException;
 import org.dodds.nfrapi.category.DuplicateCategoryException;
 import org.dodds.nfrapi.category.DuplicateSubCategoryException;
 import org.dodds.nfrapi.category.SubCategoryNotFoundException;
+import org.dodds.nfrapi.org.OrganizationNotFoundException;
 import org.dodds.nfrapi.report.DuplicateReportException;
 import org.dodds.nfrapi.report.ReportNotFoundException;
 import org.dodds.nfrapi.requirement.DuplicateRequirementException;
@@ -120,5 +121,11 @@ public class GlobalExceptionHandler {
         log.warn("Invalid password reset token");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorDto("Something went wrong.  Password Reset has failed"));
     }
+
+    @ExceptionHandler(OrganizationNotFoundException.class)
+    public ResponseEntity<ErrorDto> handleOrgNotFound(OrganizationNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(ex.getMessage()));
+    }
+
 
 }

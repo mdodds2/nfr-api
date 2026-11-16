@@ -3,6 +3,7 @@ package org.dodds.nfrapi.report;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.dodds.nfrapi.authentication.UserPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -20,23 +21,23 @@ public class ReportController {
 
     @GetMapping
     public Iterable<ReportDto> getAllReports(
-            @AuthenticationPrincipal UUID userId,
+            @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false, defaultValue = "", name = "sort") String sortBy ){
-        return reportService.getAllReports(userId, sortBy);
+        return reportService.getAllReports(principal.userId(), sortBy);
     }
 
     @GetMapping("/{id}")
     public ReportDto getReport(
             @PathVariable UUID id,
-            @AuthenticationPrincipal UUID userId) {
-        return reportService.getReport(id, userId);
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return reportService.getReport(id, userPrincipal.userId());
     }
 
     @PostMapping
     public ResponseEntity<?> createReport(
             @Valid @RequestBody CreateReportRequest request,
-            @AuthenticationPrincipal UUID userId, UriComponentsBuilder uriBuilder) {
-        var reportDto = reportService.createReport(userId, request);
+            @AuthenticationPrincipal UserPrincipal userPrincipal, UriComponentsBuilder uriBuilder) {
+        var reportDto = reportService.createReport(userPrincipal.userId(), request);
         var uri = uriBuilder.path("/reports/{id}").buildAndExpand(reportDto.getId()).toUri();
         return ResponseEntity.created(uri).body(reportDto);
     }
@@ -45,15 +46,15 @@ public class ReportController {
     public ReportDto updateReport(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateReportRequest request,
-            @AuthenticationPrincipal UUID userId) {
-        return reportService.updateReport(id, userId, request);
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return reportService.updateReport(id, userPrincipal.userId(), request);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReport(
             @PathVariable UUID id,
-            @AuthenticationPrincipal UUID userId) {
-        reportService.deleteReport(id, userId);
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        reportService.deleteReport(id, userPrincipal.userId());
         return ResponseEntity.noContent().build();
     }
 

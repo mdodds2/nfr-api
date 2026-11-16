@@ -3,7 +3,9 @@ package org.dodds.nfrapi.users;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dodds.nfrapi.authentication.JwtService;
+import org.dodds.nfrapi.authentication.UserPrincipal;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,14 +45,30 @@ class UserControllerTest {
     @MockitoBean
     JwtService jwtService;   // JwtAuthenticationFilter is a @Component and needs it
 
+    @BeforeEach
+    void setUp() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new UserPrincipal(UUID.randomUUID(), null, null),
+                        null,
+                         List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                )
+        );
+    }
+
     @AfterEach
     void clearContext() {
         SecurityContextHolder.clearContext();
     }
 
     private void loginAs(UUID id) {
-        SecurityContextHolder.getContext()
-                .setAuthentication(new UsernamePasswordAuthenticationToken(id, null, List.of()));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new UserPrincipal(id, null, null),
+                        null,
+                        List.of()
+                )
+        );
     }
 
     @Test
@@ -231,14 +249,10 @@ class UserControllerTest {
     @Test
     void shouldChangeLoggedInUserPassword() throws Exception {
         var id = UUID.randomUUID();
-        var auth = new UsernamePasswordAuthenticationToken(
-                id,
-                null,
-                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        loginAs(id);
 
         var request = ChangePasswordRequest.builder().oldPassword("OLDPASSWORD").newPassword("NEWPASSWORD").build();
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
         try {
             mockMvc.perform(post("/users/me/change-password")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -254,16 +268,12 @@ class UserControllerTest {
     @Test
     void shouldNotChangeLoggedInUserNotFound() throws Exception {
         var id = UUID.randomUUID();
-        var auth = new UsernamePasswordAuthenticationToken(
-                id,
-                null,
-                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        loginAs(id);
 
         var request = ChangePasswordRequest.builder().oldPassword("OLDPASSWORD").newPassword("NEWPASSWORD").build();
 
         doThrow(UserNotFoundException.class).when(userService).changePassword(eq(id), any());
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
         try {
             mockMvc.perform(post("/users/me/change-password")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -277,16 +287,12 @@ class UserControllerTest {
     @Test
     void shouldNotChangeLoggedInUserForbidden() throws Exception {
         var id = UUID.randomUUID();
-        var auth = new UsernamePasswordAuthenticationToken(
-                id,
-                null,
-                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        loginAs(id);
 
         var request = ChangePasswordRequest.builder().oldPassword("OLDPASSWORD").newPassword("NEWPASSWORD").build();
 
         doThrow(AccessDeniedException.class).when(userService).changePassword(eq(id), any());
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
         try {
             mockMvc.perform(post("/users/me/change-password")
                             .contentType(MediaType.APPLICATION_JSON)

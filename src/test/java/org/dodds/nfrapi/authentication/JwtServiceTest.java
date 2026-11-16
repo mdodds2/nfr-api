@@ -1,7 +1,9 @@
 package org.dodds.nfrapi.authentication;
 
-import org.dodds.nfrapi.authentication.JwtConfig;
-import org.dodds.nfrapi.authentication.JwtService;
+import io.jsonwebtoken.Jwts;
+import org.dodds.nfrapi.org.OrgMembership;
+import org.dodds.nfrapi.org.OrgRole;
+import org.dodds.nfrapi.org.Organization;
 import org.dodds.nfrapi.users.Role;
 import org.dodds.nfrapi.users.User;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,10 +16,12 @@ class JwtServiceTest {
 
     private JwtService jwtService;
     private User user;
+    private OrgMembership membership;
+    private JwtConfig config;
 
     @BeforeEach
     void setUp() {
-        var config = new JwtConfig();
+        config = new JwtConfig();
         config.setSecret("a-test-secret-that-is-at-least-32-bytes-long!!");
         config.setAccessTokenExpiration(300);     // seconds
         config.setRefreshTokenExpiration(3600);
@@ -33,7 +37,7 @@ class JwtServiceTest {
 
     @Test
     void shouldGenerateAndParseAccessToken() {
-        var token = jwtService.generateAccessToken(user).toString();
+        var token = jwtService.generateAccessToken(user, membership).toString();
         var parsed = jwtService.parseToken(token);
 
         assertThat(parsed).isNotNull();
@@ -44,7 +48,7 @@ class JwtServiceTest {
 
     @Test
     void shouldGenerateAndParseRefreshTokenToken() {
-        var token = jwtService.generateRefreshToken(user).toString();
+        var token = jwtService.generateRefreshToken(user, membership).toString();
         var parsed = jwtService.parseToken(token);
 
         assertThat(parsed).isNotNull();
@@ -57,4 +61,25 @@ class JwtServiceTest {
     void shouldReturnNullForGarbageToken() {
         assertThat(jwtService.parseToken("not.a.jwt")).isNull();
     }
+
+    @Test
+    void shouldIncludeOrgClaimsInAccessToken() {
+        var orgId = UUID.randomUUID();
+        var membership = OrgMembership.builder()
+                .organization(Organization.builder().id(orgId).build())
+                .orgRole(OrgRole.ORG_ADMIN)
+                .build();
+
+        var token = jwtService.generateAccessToken(user, membership).toString();
+
+        var claims = Jwts.parser()
+                .verifyWith(config.getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        assertThat(claims.get("orgId", String.class)).isEqualTo(orgId.toString());
+        assertThat(claims.get("orgRole", String.class)).isEqualTo("ORG_ADMIN");
+    }
+
 }

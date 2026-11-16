@@ -1,6 +1,8 @@
 package org.dodds.nfrapi.authentication;
 
 import lombok.AllArgsConstructor;
+import org.dodds.nfrapi.org.OrgMembership;
+import org.dodds.nfrapi.org.OrgMembershipRepository;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,19 +12,19 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @AllArgsConstructor
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final OrgMembershipRepository membershipRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
     public User getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        var userId = (UUID) authentication.getPrincipal();
+        var userPrincipal = (UserPrincipal)authentication.getPrincipal();
+        var userId = userPrincipal.userId();
         return userRepository.findById(userId).orElse(null);
     }
 
@@ -40,9 +42,9 @@ public class AuthService {
         }
 
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BadCredentialsException("Email id not found"));
-        var accessToken = jwtService.generateAccessToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
-
+        var membership = findMembership(user);
+        var accessToken = jwtService.generateAccessToken(user, membership);
+        var refreshToken = jwtService.generateRefreshToken(user, membership);
         return new LoginResponse(accessToken, refreshToken);
     }
 
@@ -53,6 +55,11 @@ public class AuthService {
         }
 
         var user = userRepository.findById(jwt.getUserId()).orElseThrow(() -> new BadCredentialsException("User not found."));
-        return jwtService.generateAccessToken(user);
+        return jwtService.generateAccessToken(user, findMembership(user));
+    }
+
+    private OrgMembership findMembership(User user) {
+        return membershipRepository.findByUserId(user.getId())
+                .stream().findFirst().orElse(null);
     }
 }

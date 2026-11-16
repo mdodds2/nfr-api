@@ -13,3 +13,5 @@ ALTER TABLE reports
   ADD CONSTRAINT fk_reports_user_id
   FOREIGN KEY (user_id) REFERENCES users (id)
   ON DELETE CASCADE;
+
+  ALTER TABLE reports ADD org_id BINARY(16) NULL REFERENCES organizations(id);

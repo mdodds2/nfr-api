@@ -3,6 +3,7 @@ package org.dodds.nfrapi.users;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.dodds.nfrapi.authentication.UserPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -25,8 +26,8 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public UserDto getUser(@AuthenticationPrincipal UUID userId) {
-        return userService.getUser(userId);
+    public UserDto getUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return userService.getUser(userPrincipal.userId());
     }
 
     @PostMapping
@@ -41,8 +42,8 @@ public class UserController {
     @PutMapping("/me")
     public UserDto updateUser(
             @Valid @RequestBody UpdateUserRequest request,
-            @AuthenticationPrincipal UUID userId) {
-        return userService.updateUser(userId, request);
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return userService.updateUser(userPrincipal.userId(), request);
     }
 
     @DeleteMapping("/{id}")
@@ -53,8 +54,8 @@ public class UserController {
 
     @PostMapping("/me/change-password")
     public ResponseEntity<?> changePasswordWhenLoggedIn(
-            @Valid @RequestBody ChangePasswordRequest request, @AuthenticationPrincipal UUID userId) {
-        userService.changePassword(userId, request);
+            @Valid @RequestBody ChangePasswordRequest request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        userService.changePassword(userPrincipal.userId(), request);
         return ResponseEntity.noContent().build();
     }
 

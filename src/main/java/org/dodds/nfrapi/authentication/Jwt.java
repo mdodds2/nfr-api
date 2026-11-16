@@ -3,6 +3,7 @@ package org.dodds.nfrapi.authentication;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import org.dodds.nfrapi.org.OrgRole;
 import org.dodds.nfrapi.users.Role;
 
 import javax.crypto.SecretKey;
@@ -29,6 +30,16 @@ public class Jwt {
 
     public Role getRole() {
         return Role.valueOf(claims.get("role").toString());
+    }
+
+    public UUID getOrgId() {
+        String orgId = claims.get("orgId", String.class);
+        return orgId == null ? null : UUID.fromString(orgId);
+    }
+
+    public OrgRole getOrgRole() {
+        String orgRole = claims.get("orgRole", String.class);
+        return orgRole == null ? null : OrgRole.valueOf(orgRole);
     }
 
     @Override

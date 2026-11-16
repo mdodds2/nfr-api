@@ -37,6 +37,7 @@ public interface CategoryMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "modifiedAt", ignore = true)
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "nextSequence", ignore = true)
     SubCategory toEntityFromCreateSubCategoryRequest(CreateSubCategoryRequest request);
 
     @Mapping(target = "id", ignore = true)
