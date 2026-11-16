@@ -16,7 +16,7 @@ class JwtServiceTest {
 
     private JwtService jwtService;
     private User user;
-    //private OrgMembership membership;
+    private OrgMembership membership;
     private JwtConfig config;
 
     @BeforeEach
