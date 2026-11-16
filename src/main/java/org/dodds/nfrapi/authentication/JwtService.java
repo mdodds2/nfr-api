@@ -33,8 +33,8 @@ public class JwtService {
                 .expiration(new Date(System.currentTimeMillis() + 1000 * tokenExpiration));
 
         if (membership != null) {
-            builder.add("orgId", membership.getOrganization().getId().toString())
-                    .add("orgRole", membership.getOrgRole().name());
+            builder.add("orgId", membership.getOrganization() == null ? null : membership.getOrganization().getId().toString())
+                    .add("orgRole", membership.getOrgRole() == null ? null : membership.getOrgRole().name());
         }
 
         return new Jwt(builder.build(), jwtConfig.getSecretKey());

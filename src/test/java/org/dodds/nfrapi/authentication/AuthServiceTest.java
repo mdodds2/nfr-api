@@ -63,7 +63,8 @@ public class AuthServiceTest {
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
         when(jwtService.generateAccessToken(user, membership)).thenReturn(accessToken);
         when(jwtService.generateRefreshToken(user, membership)).thenReturn(refreshToken);
-        when(membershipRepository.findByUserId(user.getId())).thenReturn(List.of(membership));
+        when(membershipRepository.findFirstByUserIdOrderByOrganizationNameAsc(user.getId())).thenReturn(Optional.of(membership));
+
 
         var response = authService.login(request);
 
@@ -104,7 +105,7 @@ public class AuthServiceTest {
         when(refreshJwt.isExpired()).thenReturn(false);
         when(refreshJwt.getUserId()).thenReturn(userId);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(membershipRepository.findByUserId(userId)).thenReturn(List.of(membership));
+        when(membershipRepository.findFirstByUserIdOrderByOrganizationNameAsc(userId)).thenReturn(Optional.of(membership));
         when(jwtService.generateAccessToken(user, membership)).thenReturn(newAccessToken);
 
         var result = authService.refreshAccessToken("refresh-token");

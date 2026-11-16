@@ -291,4 +291,18 @@ public class UserServiceTest {
         verifyNoInteractions(passwordEncoder);
     }
 
+    @Test
+    void shouldUpdateUserWithSameEmail() {
+        var id = UUID.randomUUID();
+        var user = User.builder().id(id).name("Test User").email("a@b.com").build();
+        var request = UpdateUserRequest.builder().name("New Name").email("A@B.com").build();
+
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+
+        userService.updateUser(id, request);
+
+        verify(userRepository, never()).existsByEmailIgnoreCase(any());
+        verify(userRepository).save(user);
+    }
+
 }

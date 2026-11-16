@@ -12,6 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @AllArgsConstructor
 @Service
 public class AuthService {
@@ -42,7 +44,7 @@ public class AuthService {
         }
 
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BadCredentialsException("Email id not found"));
-        var membership = findMembership(user);
+        var membership = findMembership(user).orElse(null);
         var accessToken = jwtService.generateAccessToken(user, membership);
         var refreshToken = jwtService.generateRefreshToken(user, membership);
         return new LoginResponse(accessToken, refreshToken);
@@ -55,11 +57,10 @@ public class AuthService {
         }
 
         var user = userRepository.findById(jwt.getUserId()).orElseThrow(() -> new BadCredentialsException("User not found."));
-        return jwtService.generateAccessToken(user, findMembership(user));
+        return jwtService.generateAccessToken(user, findMembership(user).orElse(null));
     }
 
-    private OrgMembership findMembership(User user) {
-        return membershipRepository.findByUserId(user.getId())
-                .stream().findFirst().orElse(null);
+    private Optional<OrgMembership> findMembership(User user) {
+        return membershipRepository.findFirstByUserIdOrderByOrganizationNameAsc(user.getId());
     }
 }

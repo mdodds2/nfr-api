@@ -35,8 +35,8 @@ class JwtServiceTest {
                 .build();
 
         membership = OrgMembership.builder()
-                .organization(Organization.builder().id(UUID.randomUUID()).build())
-                .orgRole(null)
+                .organization(Organization.builder().id(UUID.randomUUID()).name("Test Organization").slug("test-organization").build())
+                .orgRole(OrgRole.MEMBER)
                 .build();
     }
 
@@ -48,6 +48,23 @@ class JwtServiceTest {
         assertThat(parsed).isNotNull();
         assertThat(parsed.getUserId()).isEqualTo(user.getId());
         assertThat(parsed.getRole()).isEqualTo(user.getRole());
+        assertThat(parsed.getOrgId()).isEqualTo(membership.getOrganization().getId());
+        assertThat(parsed.getOrgRole()).isEqualTo(membership.getOrgRole());
+
+        assertThat(parsed.isExpired()).isFalse();
+    }
+
+    @Test
+    void shouldGenerateAndParseAccessTokenNoMembership() {
+        var token = jwtService.generateAccessToken(user, null).toString();
+        var parsed = jwtService.parseToken(token);
+
+        assertThat(parsed).isNotNull();
+        assertThat(parsed.getUserId()).isEqualTo(user.getId());
+        assertThat(parsed.getRole()).isEqualTo(user.getRole());
+        assertThat(parsed.getOrgId()).isNull();;
+        assertThat(parsed.getOrgRole()).isNull();
+
         assertThat(parsed.isExpired()).isFalse();
     }
 

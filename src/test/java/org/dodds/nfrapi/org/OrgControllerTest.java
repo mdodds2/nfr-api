@@ -75,11 +75,65 @@ public class OrgControllerTest {
                 .andExpect(jsonPath("$.error").value("Organization not found."));
     }
 
+    @Test
+    void shouldGetAllOrgsForUser() throws Exception {
+        var orgId = UUID.randomUUID();
+        var orgDto = OrgDto.builder().id(orgId).name("Org 1").slug("org-1").build();
+
+        when(orgService.getAllOrganizations(userId, false,"slug")).thenReturn(List.of(orgDto));
+
+        var result = mockMvc.perform(get("/organizations").param("sort", "slug"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(orgDto.getId().toString()))
+                .andExpect(jsonPath("$[0].name").value(orgDto.getName()))
+                .andExpect(jsonPath("$[0].slug").value(orgDto.getSlug()))
+        ;
+    }
+
+    @Test
+    void shouldGetAllOrgsForUserJustSortedDifferently() throws Exception {
+        var orgId = UUID.randomUUID();
+        var orgDto = OrgDto.builder().id(orgId).name("Org 1").slug("org-1").build();
+
+        when(orgService.getAllOrganizations(userId, false,"name")).thenReturn(List.of(orgDto));
+
+        mockMvc.perform(get("/organizations").param("sort", "name"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(orgDto.getId().toString()))
+                .andExpect(jsonPath("$[0].name").value(orgDto.getName()))
+                .andExpect(jsonPath("$[0].slug").value(orgDto.getSlug()));
+    }
+
+    @Test
+    void shouldGetAllOrgsForPlatformAdmin() throws Exception {
+        loginAsAdmin();
+        var orgId = UUID.randomUUID();
+        var orgDto = OrgDto.builder().id(orgId).name("Org 1").slug("org-1").build();
+
+        when(orgService.getAllOrganizations(userId, true,"name")).thenReturn(List.of(orgDto));
+
+        mockMvc.perform(get("/organizations").param("sort", "name"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(orgDto.getId().toString()))
+                .andExpect(jsonPath("$[0].name").value(orgDto.getName()))
+                .andExpect(jsonPath("$[0].slug").value(orgDto.getSlug()));
+    }
+
     private UsernamePasswordAuthenticationToken getTestAuthToken(UUID userId) {
         return new UsernamePasswordAuthenticationToken(
                 new UserPrincipal(userId, null, null),
                 null,
                 List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+    }
+
+    private void loginAsAdmin() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new UserPrincipal(userId, null, null),
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                )
         );
     }
 
