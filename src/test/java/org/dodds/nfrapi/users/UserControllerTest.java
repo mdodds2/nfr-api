@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.dodds.nfrapi.authentication.JwtService;
 import org.dodds.nfrapi.authentication.UserPrincipal;
+import org.dodds.nfrapi.org.OrgMembershipDto;
+import org.dodds.nfrapi.org.OrgRole;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +51,7 @@ class UserControllerTest {
     void setUp() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
-                        new UserPrincipal(UUID.randomUUID(), null, null),
+                        new UserPrincipal(UUID.randomUUID()),
                         null,
                          List.of(new SimpleGrantedAuthority("ROLE_USER"))
                 )
@@ -64,12 +66,22 @@ class UserControllerTest {
     private void loginAs(UUID id) {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
-                        new UserPrincipal(id, null, null),
+                        new UserPrincipal(id),
                         null,
                         List.of()
                 )
         );
     }
+    private void loginAsAdmin(UUID userId) {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new UserPrincipal(userId),
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                )
+        );
+    }
+
 
     @Test
     void shouldGetAllUsersSortedByEmail() throws Exception {
@@ -99,16 +111,48 @@ class UserControllerTest {
 
         when(userService.getUser(any())).thenReturn(userDto);
 
-        mockMvc.perform(get("/users/me"))
+        loginAsAdmin(id);
+        mockMvc.perform(get("/users/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()));
+    }
+
+    @Test
+    void shouldGetCurrentUser() throws Exception {
+        var userId = UUID.randomUUID();
+        var org = OrgMembershipDto.builder()
+                .id(UUID.randomUUID())
+                .name("TEST ORG")
+                .slug("test-org")
+                .orgRole(OrgRole.ORG_ADMIN)
+                .build();
+
+        List<OrgMembershipDto> orgs = List.of(org);
+
+        var currentUserDto = CurrentUserDto.builder()
+                .id(userId)
+                .name("Test User1")
+                .email("user1@example.com")
+                .role(Role.USER)
+                .orgs(orgs)
+                .build();
+
+        when(userService.getCurrentUser(userId)).thenReturn(currentUserDto);
+
+        loginAs(userId);
+        mockMvc.perform(get("/users/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId.toString()))
+                .andExpect(jsonPath("$.email").value("user1@example.com"))
+                .andExpect(jsonPath("$.orgs[0].name").value("TEST ORG"))
+                .andExpect(jsonPath("$.orgs[0].orgRole").value("ORG_ADMIN"));
     }
 
     @Test
     void shouldNotGetAUserNotFound() throws Exception {
         var id = UUID.randomUUID();
 
-        when(userService.getUser(id)).thenThrow(new UserNotFoundException());
+        when(userService.getCurrentUser(id)).thenThrow(new UserNotFoundException());
 
         loginAs(id);
         mockMvc.perform(get("/users/me"))

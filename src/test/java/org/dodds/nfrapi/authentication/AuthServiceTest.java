@@ -50,7 +50,7 @@ public class AuthServiceTest {
 
     @Test
     void shouldLogin() {
-        var request = LoginRequest.builder().email("mike@test.com").password("default").build();
+        var request = LoginRequest.builder().email("user@test.com").password("default").build();
 
         var user = User.builder().id(UUID.randomUUID()).email(request.getEmail()).build();
         var membership = OrgMembership.builder().id(UUID.randomUUID()).orgRole(OrgRole.ORG_ADMIN).build();
@@ -61,10 +61,8 @@ public class AuthServiceTest {
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
-        when(jwtService.generateAccessToken(user, membership)).thenReturn(accessToken);
-        when(jwtService.generateRefreshToken(user, membership)).thenReturn(refreshToken);
-        when(membershipRepository.findFirstByUserIdOrderByOrganizationNameAsc(user.getId())).thenReturn(Optional.of(membership));
-
+        when(jwtService.generateAccessToken(user)).thenReturn(accessToken);
+        when(jwtService.generateRefreshToken(user)).thenReturn(refreshToken);
 
         var response = authService.login(request);
 
@@ -78,7 +76,7 @@ public class AuthServiceTest {
         var request = LoginRequest.builder().email("user@test.com").password("default").build();
         when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("bad credentials"));
         assertThrows(BadCredentialsException.class, () -> authService.login(request));
-        verify(jwtService, never()).generateAccessToken(any(), any());
+        verify(jwtService, never()).generateAccessToken(any());
     }
 
     @Test
@@ -97,7 +95,6 @@ public class AuthServiceTest {
     void shouldRefreshAccessToken() {
         var userId = UUID.randomUUID();
         var user = User.builder().id(userId).build();
-        var membership = OrgMembership.builder().id(UUID.randomUUID()).orgRole(OrgRole.ORG_ADMIN).build();
         var refreshJwt = mock(Jwt.class);
         var newAccessToken = mock(Jwt.class);
 
@@ -105,8 +102,7 @@ public class AuthServiceTest {
         when(refreshJwt.isExpired()).thenReturn(false);
         when(refreshJwt.getUserId()).thenReturn(userId);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(membershipRepository.findFirstByUserIdOrderByOrganizationNameAsc(userId)).thenReturn(Optional.of(membership));
-        when(jwtService.generateAccessToken(user, membership)).thenReturn(newAccessToken);
+        when(jwtService.generateAccessToken(user)).thenReturn(newAccessToken);
 
         var result = authService.refreshAccessToken("refresh-token");
 
@@ -136,7 +132,7 @@ public class AuthServiceTest {
     @Test
     void shouldGetCurrentUser() {
         var userId = UUID.randomUUID();
-        var principal = new UserPrincipal(userId, null, null);
+        var principal = new UserPrincipal(userId);
         var user = User.builder().id(userId).build();
         var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 
@@ -147,7 +143,7 @@ public class AuthServiceTest {
 
     @Test
     void shouldNotLoginUserNotAuthenticated() {
-        var request = LoginRequest.builder().email("mike@test.com").password("default").build();
+        var request = LoginRequest.builder().email("user@test.com").password("default").build();
         var authentication = mock(Authentication.class);
         var user = User.builder().id(UUID.randomUUID()).build();
         var accessToken = mock(Jwt.class);
@@ -156,8 +152,8 @@ public class AuthServiceTest {
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(false);
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
-        when(jwtService.generateAccessToken(user, null)).thenReturn(accessToken);
-        when(jwtService.generateRefreshToken(user, null)).thenReturn(refreshToken);
+        when(jwtService.generateAccessToken(user)).thenReturn(accessToken);
+        when(jwtService.generateRefreshToken(user)).thenReturn(refreshToken);
 
         authService.login(request);
 

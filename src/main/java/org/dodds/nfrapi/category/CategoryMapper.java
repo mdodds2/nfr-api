@@ -30,6 +30,7 @@ public interface CategoryMapper {
     SubCategoryDto toDto(SubCategory subCategory);
 
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "nextSequence", ignore = true)
     SubCategory toEntity(SubCategoryDto dto);
 
     @Mapping(target = "id", ignore = true)
@@ -44,6 +45,7 @@ public interface CategoryMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "modifiedAt", ignore = true)
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "nextSequence", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void update(UpdateSubCategoryRequest request, @MappingTarget SubCategory category);
 

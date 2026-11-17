@@ -121,7 +121,7 @@ public class OrgControllerTest {
 
     private UsernamePasswordAuthenticationToken getTestAuthToken(UUID userId) {
         return new UsernamePasswordAuthenticationToken(
-                new UserPrincipal(userId, null, null),
+                new UserPrincipal(userId),
                 null,
                 List.of(new SimpleGrantedAuthority("ROLE_USER"))
         );
@@ -130,7 +130,7 @@ public class OrgControllerTest {
     private void loginAsAdmin() {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
-                        new UserPrincipal(userId, null, null),
+                        new UserPrincipal(userId),
                         null,
                         List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
                 )

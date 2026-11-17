@@ -25,9 +25,14 @@ public class UserController {
         return userService.getAllUsers(sortBy);
     }
 
+    @GetMapping("/{id}")
+    public UserDto getAUser(@PathVariable UUID id) {
+        return userService.getUser(id);
+    }
+
     @GetMapping("/me")
-    public UserDto getUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return userService.getUser(userPrincipal.userId());
+    public CurrentUserDto getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return userService.getCurrentUser(userPrincipal.userId());
     }
 
     @PostMapping

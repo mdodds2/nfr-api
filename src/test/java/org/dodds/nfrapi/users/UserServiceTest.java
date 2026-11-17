@@ -1,5 +1,6 @@
 package org.dodds.nfrapi.users;
 
+import org.dodds.nfrapi.org.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -28,7 +29,13 @@ public class UserServiceTest {
     UserRepository userRepository;
 
     @Mock
+    OrgMembershipRepository membershipRepository;
+
+    @Mock
     UserMapper mapper;
+
+    @Mock
+    OrgMembershipMapper membershipMapper;
 
     @Mock
     PasswordEncoder passwordEncoder;
@@ -173,12 +180,55 @@ public class UserServiceTest {
     }
 
     @Test
+    void shouldGetCurrentUserById() {
+        var userId = UUID.randomUUID();
+        var user = User.builder().id(userId).name("Test User").build();
+
+        var org = Organization.builder().id(UUID.randomUUID()).name("TEST ORG").slug("test-org").build();
+        var membership = OrgMembership.builder()
+                .id(UUID.randomUUID())
+                .orgRole(OrgRole.MEMBER)
+                .organization(org)
+                .build();
+        var membershipDto = OrgMembershipDto.builder()
+                .id(org.getId())   // org's id, like the real mapper
+                .name("TEST ORG")
+                .slug("test-org")
+                .orgRole(OrgRole.MEMBER)
+                .build();
+
+        var memberships = List.of(membership);
+        var membershipDtos = List.of(membershipDto);
+
+        var currentUserDto = CurrentUserDto.builder()
+                .id(userId)
+                .name("Test User")
+                .orgs(membershipDtos).build();
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(membershipRepository.findByUserId(userId, Sort.by("organization.name"))).thenReturn(memberships);
+        when(membershipMapper.toDto(membership)).thenReturn(membershipDto);
+
+        var result = userService.getCurrentUser(userId);
+
+        assertThat(result).isEqualTo(currentUserDto);
+    }
+
+    @Test
     void shouldNotGetUserByIdNotFound() {
         var id = UUID.randomUUID();
 
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> userService.getUser(id));
+    }
+
+    @Test
+    void shouldNotGetCurrentUserByIdNotFound() {
+        var id = UUID.randomUUID();
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(UserNotFoundException.class, () -> userService.getCurrentUser(id));
+        verify(membershipRepository, never()).findByUserId(any(), any());
     }
 
     @Test

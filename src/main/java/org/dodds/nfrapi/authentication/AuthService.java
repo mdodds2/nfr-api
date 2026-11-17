@@ -1,7 +1,6 @@
 package org.dodds.nfrapi.authentication;
 
 import lombok.AllArgsConstructor;
-import org.dodds.nfrapi.org.OrgMembership;
 import org.dodds.nfrapi.org.OrgMembershipRepository;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
@@ -11,8 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @AllArgsConstructor
 @Service
@@ -44,9 +41,8 @@ public class AuthService {
         }
 
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BadCredentialsException("Email id not found"));
-        var membership = findMembership(user).orElse(null);
-        var accessToken = jwtService.generateAccessToken(user, membership);
-        var refreshToken = jwtService.generateRefreshToken(user, membership);
+        var accessToken = jwtService.generateAccessToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
         return new LoginResponse(accessToken, refreshToken);
     }
 
@@ -57,10 +53,7 @@ public class AuthService {
         }
 
         var user = userRepository.findById(jwt.getUserId()).orElseThrow(() -> new BadCredentialsException("User not found."));
-        return jwtService.generateAccessToken(user, findMembership(user).orElse(null));
+        return jwtService.generateAccessToken(user);
     }
 
-    private Optional<OrgMembership> findMembership(User user) {
-        return membershipRepository.findFirstByUserIdOrderByOrganizationNameAsc(user.getId());
-    }
 }

@@ -54,7 +54,7 @@ public class ReportControllerTest {
     private void loginAs(UUID id) {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
-                        new UserPrincipal(id, null, null),
+                        new UserPrincipal(id),
                         null,
                         List.of()
                 )
@@ -309,7 +309,7 @@ public class ReportControllerTest {
 
     private UsernamePasswordAuthenticationToken getTestAuthToken(String role) {
         return new UsernamePasswordAuthenticationToken(
-                new UserPrincipal(UUID.randomUUID(), null, null),
+                new UserPrincipal(UUID.randomUUID()),
                 null,
                 List.of(new SimpleGrantedAuthority("ROLE_" + role))
         );

@@ -65,7 +65,7 @@ class SecurityConfigTest {
 
     private UsernamePasswordAuthenticationToken getTestAuthToken(String role) {
         return new UsernamePasswordAuthenticationToken(
-                new UserPrincipal(UUID.randomUUID(), null, null),
+                new UserPrincipal(UUID.randomUUID()),
                 null,
                 List.of(new SimpleGrantedAuthority("ROLE_" + role))
         );
