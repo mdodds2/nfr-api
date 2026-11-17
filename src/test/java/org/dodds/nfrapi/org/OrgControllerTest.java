@@ -82,7 +82,7 @@ public class OrgControllerTest {
 
         when(orgService.getAllOrganizations(userId, false,"slug")).thenReturn(List.of(orgDto));
 
-        var result = mockMvc.perform(get("/organizations").param("sort", "slug"))
+        mockMvc.perform(get("/organizations").param("sort", "slug"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(orgDto.getId().toString()))
                 .andExpect(jsonPath("$[0].name").value(orgDto.getName()))

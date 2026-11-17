@@ -1,7 +1,6 @@
 package org.dodds.nfrapi.authentication;
 
 import org.dodds.nfrapi.org.OrgMembership;
-import org.dodds.nfrapi.org.OrgMembershipRepository;
 import org.dodds.nfrapi.org.OrgRole;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
@@ -32,9 +31,6 @@ public class AuthServiceTest {
     UserRepository userRepository;
 
     @Mock
-    OrgMembershipRepository membershipRepository;
-
-    @Mock
     AuthenticationManager authenticationManager;
 
     @Mock
@@ -53,7 +49,6 @@ public class AuthServiceTest {
         var request = LoginRequest.builder().email("user@test.com").password("default").build();
 
         var user = User.builder().id(UUID.randomUUID()).email(request.getEmail()).build();
-        var membership = OrgMembership.builder().id(UUID.randomUUID()).orgRole(OrgRole.ORG_ADMIN).build();
         var authentication = mock(Authentication.class);
         var accessToken = mock(Jwt.class);
         var refreshToken = mock(Jwt.class);

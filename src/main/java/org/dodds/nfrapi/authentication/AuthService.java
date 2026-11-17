@@ -1,7 +1,6 @@
 package org.dodds.nfrapi.authentication;
 
 import lombok.AllArgsConstructor;
-import org.dodds.nfrapi.org.OrgMembershipRepository;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final OrgMembershipRepository membershipRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 

@@ -15,7 +15,6 @@ class JwtServiceTest {
 
     private JwtService jwtService;
     private User user;
-    private OrgMembership membership;
 
     @BeforeEach
     void setUp() {
@@ -29,12 +28,7 @@ class JwtServiceTest {
                 .id(UUID.randomUUID())
                 .name("Mike")
                 .email("mike@example.com")
-                .role(Role.USER)               // use one of your real Role values
-                .build();
-
-        membership = OrgMembership.builder()
-                .organization(Organization.builder().id(UUID.randomUUID()).name("Test Organization").slug("test-organization").build())
-                .orgRole(OrgRole.MEMBER)
+                .role(Role.USER)
                 .build();
     }
 
