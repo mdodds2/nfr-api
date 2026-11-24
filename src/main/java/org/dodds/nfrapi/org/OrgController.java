@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.dodds.nfrapi.authentication.UserPrincipal;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -65,6 +66,16 @@ public class OrgController {
             @PathVariable UUID targetUserId,
             @Valid @RequestBody UpdateMemberRoleRequest request) {
         return orgService.updateMemberRole(orgId, targetUserId, principal.userId(), isAdmin(authentication), request);
+    }
+
+    @DeleteMapping("/{orgId}/members/{userId}")
+    public ResponseEntity<Void> deleteMemberFromOrg(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @CurrentSecurityContext(expression = "authentication") Authentication authentication,
+            @PathVariable UUID orgId,
+            @PathVariable UUID userId) {
+        orgService.removeMember(orgId, userId, principal.userId(), isAdmin(authentication));
+        return ResponseEntity.noContent().build();
     }
 
     private boolean isAdmin(Authentication authentication) {

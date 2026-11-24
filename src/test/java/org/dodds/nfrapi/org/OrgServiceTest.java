@@ -585,6 +585,26 @@ class OrgServiceTest {
     }
 
     @Test
+    void shouldNotUpdateAMemberRoleOrgNotFound() {
+        // Arrange
+        var orgId = UUID.randomUUID();
+        var callerId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        var request = UpdateMemberRoleRequest.builder()
+                .orgRole(OrgRole.MEMBER)
+                .build();
+
+        when(orgRepository.existsById(orgId)).thenReturn(false);
+
+        // Act
+
+        // Assert
+        assertThrows(OrganizationNotFoundException.class, () -> orgService.updateMemberRole(orgId, targetUserId, callerId, true, request));
+        verify(membershipRepository, never()).save(any());
+    }
+
+    @Test
     void shouldNotUpdateAMemberRoleLastOrgAdmin() {
         // Arrange
         var orgId = UUID.randomUUID();
@@ -626,6 +646,157 @@ class OrgServiceTest {
         // Assert
         assertThrows(LastOrgAdminException.class, () -> orgService.updateMemberRole(orgId, targetUserId, callerId, false, request));
         verify(membershipRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNotUpdateAMemberNotFound() {
+        // Arrange
+        var orgId = UUID.randomUUID();
+        var callerId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        var request = UpdateMemberRoleRequest.builder()
+                .orgRole(OrgRole.MEMBER)
+                .build();
+
+        when(orgRepository.existsById(orgId)).thenReturn(true);
+        when(membershipRepository.findByOrganizationIdAndUserId(orgId, targetUserId)).thenReturn(Optional.empty());
+
+        // Act
+
+        // Assert
+        assertThrows(MemberNotFoundException.class, () -> orgService.updateMemberRole(orgId, targetUserId, callerId, true, request));
+        verify(membershipRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldRemoveMemberAsPlatformAdmin() {
+        // Arrange
+        var orgId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+        var callerId = UUID.randomUUID();
+
+        var org = Organization.builder()
+                .id(orgId)
+                .name("Unit Test Organization1")
+                .slug("unit-test-organization1")
+                .build();
+
+        var orgMembership = OrgMembership.builder()
+                .organization(org)
+                .orgRole(OrgRole.MEMBER)
+                .build();
+
+        when(orgRepository.existsById(orgId)).thenReturn(true);
+        when(membershipRepository.findByOrganizationIdAndUserId(orgId, targetUserId)).thenReturn(Optional.of(orgMembership));
+
+        // Act
+        orgService.removeMember(orgId, targetUserId, callerId, true);
+
+        //Assert
+        verify(membershipRepository).delete(orgMembership);
+    }
+
+    @Test
+    void shouldRemoveMemberAsOrgAdmin() {
+        // Arrange
+        var orgId = UUID.randomUUID();
+        var callerId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        var org = Organization.builder()
+                .id(orgId)
+                .name("Unit Test Organization1")
+                .slug("unit-test-organization1")
+                .build();
+
+        var adminMembership = OrgMembership.builder()
+                .organization(org)
+                .orgRole(OrgRole.ORG_ADMIN)
+                .build();
+
+        var memberMembership = OrgMembership.builder()
+                .organization(org)
+                .orgRole(OrgRole.MEMBER)
+                .build();
+
+        when(membershipRepository.findByOrganizationIdAndUserId(orgId, callerId)).thenReturn(Optional.of(adminMembership));
+        when(membershipRepository.findByOrganizationIdAndUserId(orgId, targetUserId)).thenReturn(Optional.of(memberMembership));
+
+        // Act
+        orgService.removeMember(orgId, targetUserId, callerId, false);
+
+        //Assert
+        verify(membershipRepository).delete(memberMembership);
+    }
+
+    @Test
+    void shouldNotRemoveMemberOrgNotFound() {
+        // Arrange
+        var orgId = UUID.randomUUID();
+        var callerId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        when(orgRepository.existsById(orgId)).thenReturn(false);
+
+        // Act
+
+        //Assert
+        assertThrows(OrganizationNotFoundException.class, () -> orgService.removeMember(orgId, targetUserId, callerId, true));
+        verify(membershipRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldNotRemoveMemberOrgLastAdmin() {
+        // Arrange
+        var orgId = UUID.randomUUID();
+        var callerId = UUID.randomUUID();
+
+        var org = Organization.builder()
+                .id(orgId)
+                .name("Unit Test Organization1")
+                .slug("unit-test-organization1")
+                .build();
+
+        var orgMembership = OrgMembership.builder()
+                .organization(org)
+                .orgRole(OrgRole.ORG_ADMIN)
+                .build();
+
+        when(membershipRepository.findByOrganizationIdAndUserId(orgId, callerId)).thenReturn(Optional.of(orgMembership));
+        when(membershipRepository.countByOrganizationIdAndOrgRole(orgId, OrgRole.ORG_ADMIN)).thenReturn(1L);
+
+        // Act
+
+        //Assert
+        assertThrows(LastOrgAdminException.class, () -> orgService.removeMember(orgId, callerId, callerId, false));
+        verify(membershipRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldNotRemoveMemberAccessDenied() {
+        // Arrange
+        var orgId = UUID.randomUUID();
+        var callerId = UUID.randomUUID();
+
+        var org = Organization.builder()
+                .id(orgId)
+                .name("Unit Test Organization1")
+                .slug("unit-test-organization1")
+                .build();
+
+        var orgMembership = OrgMembership.builder()
+                .organization(org)
+                .orgRole(OrgRole.MEMBER)
+                .build();
+
+        when(membershipRepository.findByOrganizationIdAndUserId(orgId, callerId)).thenReturn(Optional.of(orgMembership));
+
+        // Act
+
+        //Assert
+        assertThrows(AccessDeniedException.class, () -> orgService.removeMember(orgId, callerId, callerId, false));
+        verify(membershipRepository, never()).delete(any());
     }
 
 }

@@ -375,10 +375,80 @@ public class OrgControllerTest {
         var request = UpdateMemberRoleRequest.builder().orgRole(OrgRole.ORG_ADMIN).build();
 
         when(orgService.updateMemberRole(eq(orgId), eq(targetUserId), eq(userId), eq(true), any(UpdateMemberRoleRequest.class))).thenThrow(new LastOrgAdminException());
+
         mockMvc.perform(patch("/organizations/{orgId}/members/{targetUserId}", orgId, targetUserId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
+    }
+
+
+    @Test
+    void shouldRemoveMemberFromOrg() throws Exception {
+        loginAs(Role.ADMIN);
+        var orgId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/organizations/{orgId}/members/{targetUserId}", orgId, targetUserId))
+                        .andExpect(status().isNoContent());
+
+        verify(orgService).removeMember(orgId, targetUserId, userId, true);
+    }
+
+    @Test
+    void shouldNotRemoveMemberFromOrgLastAdmin() throws Exception {
+        loginAs(Role.ADMIN);
+        var orgId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        doThrow(LastOrgAdminException.class)
+                .when(orgService)
+                .removeMember(orgId, targetUserId, userId, true);
+
+        mockMvc.perform(delete("/organizations/{orgId}/members/{targetUserId}", orgId, targetUserId))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void shouldNotRemoveMemberNotFound() throws Exception {
+        loginAs(Role.ADMIN);
+        var orgId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        doThrow(MemberNotFoundException.class)
+                .when(orgService)
+                .removeMember(orgId, targetUserId, userId, true);
+
+        mockMvc.perform(delete("/organizations/{orgId}/members/{targetUserId}", orgId, targetUserId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotRemoveMemberOrgNotFound() throws Exception {
+        loginAs(Role.ADMIN);
+        var orgId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        doThrow(OrganizationNotFoundException.class)
+                .when(orgService)
+                .removeMember(orgId, targetUserId, userId, true);
+
+        mockMvc.perform(delete("/organizations/{orgId}/members/{targetUserId}", orgId, targetUserId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotRemoveMemberAccessDenied() throws Exception {
+        loginAs(Role.ADMIN);
+        var orgId = UUID.randomUUID();
+        var targetUserId = UUID.randomUUID();
+
+        doThrow(AccessDeniedException.class)
+                .when(orgService)
+                .removeMember(orgId, targetUserId, userId, true);
+
+        mockMvc.perform(delete("/organizations/{orgId}/members/{targetUserId}", orgId, targetUserId))
+                .andExpect(status().isForbidden());
     }
 
     private void loginAs(Role role) {

@@ -44,11 +44,7 @@ public class OrgService {
     }
 
     public List<OrgMemberDto> getMembersForOrganization(UUID orgId, UUID userId, boolean isAdmin, String sortBy) {
-        if (!isAdmin) {
-            requireOrgAdmin(orgId, userId);
-        } else if (!orgRepository.existsById(orgId)) {
-            throw new OrganizationNotFoundException();
-        }
+        requireOrgAccess(orgId, userId, isAdmin);
 
         var field = "email".equals(sortBy) ? "user.email" : "user.name";
         var members = membershipRepository.findByOrganizationId(orgId, Sort.by(field));
@@ -57,11 +53,7 @@ public class OrgService {
 
     @Transactional
     public OrgMemberDto addMemberToOrganizationByEmail(UUID orgId, UUID callerId, boolean isAdmin, AddMemberToOrgRequest request) {
-        if (!isAdmin) {
-            requireOrgAdmin(orgId, callerId);
-        } else if (!orgRepository.existsById(orgId)) {
-            throw new OrganizationNotFoundException();
-        }
+        requireOrgAccess(orgId, callerId, isAdmin);
 
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(UserNotFoundException::new);
         var org = orgRepository.getReferenceById(orgId);
@@ -80,11 +72,7 @@ public class OrgService {
 
     @Transactional
     public OrgMemberDto updateMemberRole(UUID orgId, UUID targetUserId, UUID callerId, boolean isAdmin, UpdateMemberRoleRequest request) {
-        if (!isAdmin) {
-            requireOrgAdmin(orgId, callerId);
-        } else if (!orgRepository.existsById(orgId)) {
-            throw new OrganizationNotFoundException();
-        }
+        requireOrgAccess(orgId, callerId, isAdmin);
 
         var orgMembership = membershipRepository.findByOrganizationIdAndUserId(orgId, targetUserId).orElseThrow(MemberNotFoundException::new);
 
@@ -97,6 +85,26 @@ public class OrgService {
         orgMembership.setOrgRole(request.getOrgRole());
         var saved = membershipRepository.save(orgMembership);
         return membershipMapper.toMemberDto(saved);
+    }
+
+    @Transactional
+    public void removeMember(UUID orgId, UUID targetUserId, UUID callerId, boolean isAdmin) {
+        requireOrgAccess(orgId, callerId, isAdmin);
+
+        var orgMembership = membershipRepository.findByOrganizationIdAndUserId(orgId, targetUserId).orElseThrow(MemberNotFoundException::new);
+        if (orgMembership.getOrgRole() == OrgRole.ORG_ADMIN
+                && membershipRepository.countByOrganizationIdAndOrgRole(orgId, OrgRole.ORG_ADMIN) <= 1) {
+            throw new LastOrgAdminException();
+        }
+        membershipRepository.delete(orgMembership);
+    }
+
+    private void requireOrgAccess(UUID orgId, UUID callerId, boolean isAdmin) {
+        if (isAdmin) {
+            if (!orgRepository.existsById(orgId)) throw new OrganizationNotFoundException();
+            return;
+        }
+        requireOrgAdmin(orgId, callerId);
     }
 
     private void requireOrgAdmin(UUID orgId, UUID userId) {
