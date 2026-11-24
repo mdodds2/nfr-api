@@ -1,19 +1,14 @@
 package org.dodds.nfrapi.authentication;
 
 import lombok.AllArgsConstructor;
+import org.dodds.nfrapi.common.TokenHasher;
 import org.dodds.nfrapi.email.EmailService;
 import org.dodds.nfrapi.users.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.HexFormat;
 
 @AllArgsConstructor
 @Service
@@ -21,20 +16,19 @@ public class PasswordResetService {
 
     private static final String RESET_URL = "http://localhost:5173/reset-password";
 
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetTokenRepository tokenRepository;
+    private final TokenHasher tokenHasher;
 
     @Transactional
     public void requestReset(String email) {
         userRepository.findByEmail(email).ifPresent( user -> {
-            var rawToken = generateToken();
+            var rawToken = tokenHasher.generateToken();
             var token = PasswordResetToken.builder()
                     .userId(user.getId())
-                    .tokenHash(hash(rawToken))
+                    .tokenHash(tokenHasher.hash(rawToken))
                     .expiresAt(LocalDateTime.now().plusMinutes(30))
                     .build();
 
@@ -46,7 +40,7 @@ public class PasswordResetService {
 
     @Transactional
     public void resetPassword(String token, String newPassword) {
-        var resetToken = tokenRepository.findByTokenHash(hash(token)).orElseThrow(InvalidResetTokenException::new);
+        var resetToken = tokenRepository.findByTokenHash(tokenHasher.hash(token)).orElseThrow(InvalidResetTokenException::new);
         if(!resetToken.isUsable()) throw new InvalidResetTokenException();
 
         var user = userRepository.findById(resetToken.getUserId()).orElseThrow(InvalidResetTokenException::new);
@@ -57,19 +51,4 @@ public class PasswordResetService {
         tokenRepository.save(resetToken);
     }
 
-    private String generateToken() {
-        byte[] bytes = new byte[32];
-        RANDOM.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
-
-    private String hash(String token) {
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256")
-                    .digest(token.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(digest); // 64 hex chars
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
 }

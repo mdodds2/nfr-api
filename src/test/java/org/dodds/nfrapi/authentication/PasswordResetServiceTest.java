@@ -1,24 +1,22 @@
 package org.dodds.nfrapi.authentication;
 
+import org.dodds.nfrapi.common.TokenHasher;
 import org.dodds.nfrapi.email.EmailService;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,6 +37,9 @@ public class PasswordResetServiceTest {
     @Mock
     EmailService emailService;
 
+    @Mock
+    TokenHasher tokenHasher;
+
     @InjectMocks
     PasswordResetService passwordResetService;
 
@@ -46,6 +47,8 @@ public class PasswordResetServiceTest {
     void shouldCreateTokenAndSendEmailForKnownUser() {
         var user = User.builder().id(UUID.randomUUID()).email("user@domain.com").build();
         when(userRepository.findByEmail("user@domain.com")).thenReturn(Optional.of(user));
+        when(tokenHasher.generateToken()).thenReturn("TOKEN");
+        when(tokenHasher.hash("TOKEN")).thenReturn("HASHED");
         passwordResetService.requestReset("user@domain.com");
 
         var tokenCaptor = ArgumentCaptor.forClass(PasswordResetToken.class);
@@ -60,7 +63,6 @@ public class PasswordResetServiceTest {
 
         assertEquals(user.getId(), saved.getUserId());
         assertNotEquals(rawToken, saved.getTokenHash());   // stored hashed, not raw
-        assertEquals(64, saved.getTokenHash().length());
         assertTrue(saved.getExpiresAt().isAfter(LocalDateTime.now()));
     }
 
@@ -151,17 +153,6 @@ public class PasswordResetServiceTest {
         assertThrows(InvalidResetTokenException.class, () -> passwordResetService.resetPassword("RAW_TOKEN", "NEW_PASSWORD"));
         verify(userRepository, never()).save(any());
         verify(tokenRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Included for coverage purposes only")
-    void shouldNotResetPasswordAlgorithmNotFound()  {
-        try (MockedStatic<MessageDigest> md = mockStatic(MessageDigest.class)) {
-            md.when(() -> MessageDigest.getInstance("SHA-256"))
-                    .thenThrow(new NoSuchAlgorithmException("boom"));
-            assertThrows(IllegalStateException.class,
-                    () -> passwordResetService.resetPassword("token", "newPassword123"));
-        }
     }
 
 }
