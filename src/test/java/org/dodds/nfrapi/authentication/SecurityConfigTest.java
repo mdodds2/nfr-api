@@ -5,12 +5,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -25,27 +31,28 @@ class SecurityConfigTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
     void shouldReturn200ForReportsWhenNotAdmin() throws Exception {
-        mockMvc.perform(get("/reports")).andExpect(status().isOk());
+        mockMvc.perform(get("/reports").with(authentication(getTestAuthToken("USER"))))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void shouldReturn200ForUsersWhenAdmin() throws Exception {
-        mockMvc.perform(get("/users")).andExpect(status().isOk());
+        mockMvc.perform(get("/users").with(authentication(getTestAuthToken("ADMIN"))))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(roles = "USER")
     void shouldReturn403ForUsersWhenNotAdmin() throws Exception {
-        mockMvc.perform(get("/users")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/users").with(authentication(getTestAuthToken("USER"))))
+                .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldReturn200ForReportsWhenAdmin() throws Exception {
-        mockMvc.perform(get("/reports")).andExpect(status().isOk());
+        mockMvc.perform(get("/reports").with(authentication(getTestAuthToken("ADMIN"))))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -54,6 +61,14 @@ class SecurityConfigTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    private UsernamePasswordAuthenticationToken getTestAuthToken(String role) {
+        return new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(UUID.randomUUID()),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + role))
+        );
     }
 
 }

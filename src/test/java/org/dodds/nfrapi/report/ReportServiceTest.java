@@ -27,6 +27,9 @@ class ReportServiceTest {
     RequirementRepository requirementRepository;
 
     @Mock
+    UserRepository userRepository;
+
+    @Mock
     ReportMapper reportMapper;
 
     @Mock
@@ -34,9 +37,6 @@ class ReportServiceTest {
 
     @Mock
     MeasurementMapper measurementMapper;
-
-    @Mock
-    UserRepository userRepository;
 
     @InjectMocks
     ReportService reportService;

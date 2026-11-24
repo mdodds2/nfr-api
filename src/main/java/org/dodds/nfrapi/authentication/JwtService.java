@@ -23,19 +23,16 @@ public class JwtService {
     }
 
     private Jwt generateToken(User user, long tokenExpiration) {
-
-        var claims = Jwts.claims()
+        var builder = Jwts.claims()
                 .subject(user.getId().toString())
                 .add("name", user.getName())
                 .add("email", user.getEmail())
                 .add("role", user.getRole())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * tokenExpiration))
-                .build();
+                .expiration(new Date(System.currentTimeMillis() + 1000 * tokenExpiration));
 
-        return new Jwt(claims, jwtConfig.getSecretKey());
+        return new Jwt(builder.build(), jwtConfig.getSecretKey());
     }
-
 
     public Jwt parseToken(String token) {
         try {
@@ -55,6 +52,5 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
     }
-
 
 }

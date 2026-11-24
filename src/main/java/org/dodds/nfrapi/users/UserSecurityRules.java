@@ -13,6 +13,7 @@ public class UserSecurityRules implements SecurityRules {
         registry.requestMatchers("/users/me", "/users/me/**").authenticated();
         registry.requestMatchers(HttpMethod.POST, "/users").permitAll();
         registry.requestMatchers(HttpMethod.GET, "/users").hasRole(Role.ADMIN.name());
-        registry.requestMatchers("/users/{id}", "/users/{id}/**").hasRole(Role.ADMIN.name());
+        registry.requestMatchers(HttpMethod.GET, "/users/{id}").hasRole(Role.ADMIN.name());
+        registry.requestMatchers(HttpMethod.DELETE, "/users/{id}").hasRole(Role.ADMIN.name());
     }
 }

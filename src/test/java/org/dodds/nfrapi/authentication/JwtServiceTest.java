@@ -1,7 +1,8 @@
 package org.dodds.nfrapi.authentication;
 
-import org.dodds.nfrapi.authentication.JwtConfig;
-import org.dodds.nfrapi.authentication.JwtService;
+import org.dodds.nfrapi.org.OrgMembership;
+import org.dodds.nfrapi.org.OrgRole;
+import org.dodds.nfrapi.org.Organization;
 import org.dodds.nfrapi.users.Role;
 import org.dodds.nfrapi.users.User;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +28,7 @@ class JwtServiceTest {
                 .id(UUID.randomUUID())
                 .name("Mike")
                 .email("mike@example.com")
-                .role(Role.USER)               // use one of your real Role values
+                .role(Role.USER)
                 .build();
     }
 
@@ -39,6 +40,20 @@ class JwtServiceTest {
         assertThat(parsed).isNotNull();
         assertThat(parsed.getUserId()).isEqualTo(user.getId());
         assertThat(parsed.getRole()).isEqualTo(user.getRole());
+        assertThat(parsed.isExpired()).isFalse();
+    }
+
+    @Test
+    void shouldGenerateAndParseAccessTokenNoMembership() {
+        var token = jwtService.generateAccessToken(user).toString();
+        var parsed = jwtService.parseToken(token);
+
+        assertThat(parsed).isNotNull();
+        assertThat(parsed.getUserId()).isEqualTo(user.getId());
+        assertThat(parsed.getRole()).isEqualTo(user.getRole());
+        assertThat(parsed.getOrgId()).isNull();
+        assertThat(parsed.getOrgRole()).isNull();
+
         assertThat(parsed.isExpired()).isFalse();
     }
 
@@ -57,4 +72,5 @@ class JwtServiceTest {
     void shouldReturnNullForGarbageToken() {
         assertThat(jwtService.parseToken("not.a.jwt")).isNull();
     }
+
 }

@@ -1,5 +1,7 @@
 package org.dodds.nfrapi.authentication;
 
+import org.dodds.nfrapi.org.OrgMembership;
+import org.dodds.nfrapi.org.OrgRole;
 import org.dodds.nfrapi.users.User;
 import org.dodds.nfrapi.users.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -43,8 +45,8 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldLogin() throws Exception {
-        var request = LoginRequest.builder().email("mike@test.com").password("default").build();
+    void shouldLogin() {
+        var request = LoginRequest.builder().email("user@test.com").password("default").build();
 
         var user = User.builder().id(UUID.randomUUID()).email(request.getEmail()).build();
         var authentication = mock(Authentication.class);
@@ -65,16 +67,16 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldNotLoginBadPassword() throws Exception {
-        var request = LoginRequest.builder().email("mike@test.com").password("default").build();
+    void shouldNotLoginBadPassword() {
+        var request = LoginRequest.builder().email("user@test.com").password("default").build();
         when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("bad credentials"));
         assertThrows(BadCredentialsException.class, () -> authService.login(request));
         verify(jwtService, never()).generateAccessToken(any());
     }
 
     @Test
-    void shouldNotLoginUserNotFound() throws Exception {
-        var request = LoginRequest.builder().email("mike@test.com").password("default").build();
+    void shouldNotLoginUserNotFound() {
+        var request = LoginRequest.builder().email("user@test.com").password("default").build();
         var authentication = mock(Authentication.class);
 
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
@@ -85,7 +87,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldRefreshAccessToken() throws Exception {
+    void shouldRefreshAccessToken() {
         var userId = UUID.randomUUID();
         var user = User.builder().id(userId).build();
         var refreshJwt = mock(Jwt.class);
@@ -110,7 +112,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldNotRefreshAccessUserNotFound() throws Exception {
+    void shouldNotRefreshAccessUserNotFound() {
         var userId = UUID.randomUUID();
         var refreshJwt = mock(Jwt.class);
 
@@ -125,8 +127,9 @@ public class AuthServiceTest {
     @Test
     void shouldGetCurrentUser() {
         var userId = UUID.randomUUID();
+        var principal = new UserPrincipal(userId);
         var user = User.builder().id(userId).build();
-        var auth = new UsernamePasswordAuthenticationToken(userId, null, List.of());
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 
         SecurityContextHolder.getContext().setAuthentication(auth);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -134,10 +137,10 @@ public class AuthServiceTest {
     }
 
     @Test
-    void shouldNotLoginUserNotAuthenticated() throws Exception {
-        var request = LoginRequest.builder().email("mike@test.com").password("default").build();
+    void shouldNotLoginUserNotAuthenticated() {
+        var request = LoginRequest.builder().email("user@test.com").password("default").build();
         var authentication = mock(Authentication.class);
-        var user = new User();
+        var user = User.builder().id(UUID.randomUUID()).build();
         var accessToken = mock(Jwt.class);
         var refreshToken = mock(Jwt.class);
 
@@ -162,6 +165,5 @@ public class AuthServiceTest {
 
         verify(userRepository, never()).findById(any());
     }
-
 
 }

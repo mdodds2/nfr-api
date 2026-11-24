@@ -37,6 +37,7 @@ class JwtAuthenticationFilterTest {
     @Test
     void shouldAuthenticateValidToken() throws Exception {
         var userId = UUID.randomUUID();
+        var userPrincipal = new UserPrincipal(userId);
         var jwt = mock(Jwt.class);
 
         when(jwt.isExpired()).thenReturn(false);
@@ -48,7 +49,7 @@ class JwtAuthenticationFilterTest {
         filter.doFilter(request, response, chain);
         var auth = SecurityContextHolder.getContext().getAuthentication();
 
-        assertThat(auth.getPrincipal()).isEqualTo(userId);
+        assertThat(auth.getPrincipal()).isEqualTo(userPrincipal);
         assertThat(auth.getAuthorities()).extracting("authority").containsExactly("ROLE_ADMIN");
         verify(chain).doFilter(request, response);
     }

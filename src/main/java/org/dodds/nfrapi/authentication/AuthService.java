@@ -10,8 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @AllArgsConstructor
 @Service
 public class AuthService {
@@ -22,7 +20,8 @@ public class AuthService {
 
     public User getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        var userId = (UUID) authentication.getPrincipal();
+        var userPrincipal = (UserPrincipal)authentication.getPrincipal();
+        var userId = userPrincipal.userId();
         return userRepository.findById(userId).orElse(null);
     }
 
@@ -42,7 +41,6 @@ public class AuthService {
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BadCredentialsException("Email id not found"));
         var accessToken = jwtService.generateAccessToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
-
         return new LoginResponse(accessToken, refreshToken);
     }
 
@@ -55,4 +53,5 @@ public class AuthService {
         var user = userRepository.findById(jwt.getUserId()).orElseThrow(() -> new BadCredentialsException("User not found."));
         return jwtService.generateAccessToken(user);
     }
+
 }

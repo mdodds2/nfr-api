@@ -1,6 +1,8 @@
 package org.dodds.nfrapi.users;
 
 import lombok.AllArgsConstructor;
+import org.dodds.nfrapi.org.OrgMembershipMapper;
+import org.dodds.nfrapi.org.OrgMembershipRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,7 +17,9 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
+    private final OrgMembershipRepository membershipRepository;
     private final UserMapper userMapper;
+    private final OrgMembershipMapper membershipMapper;
     private final PasswordEncoder passwordEncoder;
 
     public List<UserDto> getAllUsers(String sortBy) {
@@ -33,6 +37,23 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    public CurrentUserDto getCurrentUser(UUID id) {
+        var user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+        var orgs = membershipRepository.findByUserId(id, Sort.by("organization.name"));
+
+        var orgDtos = orgs.stream()
+                .map(membershipMapper::toDto)
+                .toList();
+
+        return CurrentUserDto.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .orgs(orgDtos)
+                .build();
+    }
+
     public UserDto getUserByEmail(String email) {
         var user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
         return userMapper.toDto(user);
@@ -45,7 +66,7 @@ public class UserService {
         }
 
         var user = userMapper.toEntity(request);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);
         userRepository.save(user);
 

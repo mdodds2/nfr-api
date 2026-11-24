@@ -1,20 +1,9 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:nfr;MODE=MySQL
+    url: jdbc:h2:mem:nfr;MODE=MySQL;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
-    username: nfr
-    password: nfr4dev
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-
-logging:
-  level:
-    root: WARN
-    org.dodds.nfrapi: INFO
-    org.springframework.security: WARN
+jwt:
+  secret: ${JWT_SECRET:dGVzdC1vbmx5LXNlY3JldC1hdC1sZWFzdC0zMi1ieXRlcyE=}

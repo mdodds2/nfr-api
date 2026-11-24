@@ -15,6 +15,8 @@ CREATE TABLE `category` (
   UNIQUE KEY `uq_category_short_name` (`short_name`)
 )
 
+ALTER TABLE category ADD org_id BINARY(16) NULL;  -- null means global catalog
+
 insert into category (ordinal, name, short_name, description, sort_order) values (1,'Functional Suitability', 'FSU', 'This characteristic represents the degree to which a product or system provides functions that meet stated and implied needs when used under specified conditions.', 1);
 insert into category (ordinal, name, short_name, description, sort_order) values (2,'Performance Efficiency', 'PEF', 'This characteristic represents the degree to which a product performs its functions within specified time and throughput parameters and is efficient in the use of resources (such as CPU, memory, storage, network devices, energy, materials...) under specified conditions.', 2);
 insert into category (ordinal, name, short_name, description, sort_order) values (3,'Compatibility', 'COM', 'Degree to which a product, system or component can exchange information with other products, systems or components, and/or perform its required functions while sharing the same common environment and resources.', 3);

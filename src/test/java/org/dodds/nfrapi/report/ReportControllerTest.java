@@ -2,13 +2,16 @@ package org.dodds.nfrapi.report;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dodds.nfrapi.authentication.JwtService;
+import org.dodds.nfrapi.authentication.UserPrincipal;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -38,14 +41,24 @@ public class ReportControllerTest {
     @MockitoBean
     JwtService jwtService;   // JwtAuthenticationFilter is a @Component and needs it
 
+    @BeforeEach
+    void setUp() {
+        SecurityContextHolder.getContext().setAuthentication(getTestAuthToken("USER"));
+    }
+    
     @AfterEach
     void clearContext() {
         SecurityContextHolder.clearContext();
     }
 
     private void loginAs(UUID id) {
-        SecurityContextHolder.getContext()
-                .setAuthentication(new UsernamePasswordAuthenticationToken(id, null, List.of()));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        new UserPrincipal(id),
+                        null,
+                        List.of()
+                )
+        );
     }
 
     @Test
@@ -213,7 +226,8 @@ public class ReportControllerTest {
         var reportId = UUID.randomUUID();
         var userId = UUID.randomUUID();
         doNothing().when(reportService).deleteReport(reportId, userId);
-        mockMvc.perform(delete("/reports/{id}", reportId))
+        mockMvc.perform(delete("/reports/{id}", reportId)
+                )
                 .andExpect(status().isNoContent());
         verify(reportService).deleteReport(any(), any());
     }
@@ -291,6 +305,14 @@ public class ReportControllerTest {
                         .content(objectMapper.writeValueAsString(request))))
                 .andExpect(status().isBadRequest());
         verify(reportService, never()).updateReport(any(), any(), any());
+    }
+
+    private UsernamePasswordAuthenticationToken getTestAuthToken(String role) {
+        return new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(UUID.randomUUID()),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + role))
+        );
     }
 
 }
